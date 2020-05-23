@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [ master, setup-github-actions ]
+    branches: [ master ]
   pull_request:
     branches: [ master ]
 
@@ -11,11 +11,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest]
+        os: [ubuntu-latest, macos-latest]
     steps:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Install BATS
-        run: sudo npm install -g bats
+        run: brew install bats-core
       - name: Run BATS tests
         run: bats tests/
