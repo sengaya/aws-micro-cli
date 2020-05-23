@@ -16,6 +16,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Install BATS
-        run: brew unlink bats && brew install bats-core
+        run: brew install --force bats-core
       - name: Run BATS tests
         run: bats tests/
