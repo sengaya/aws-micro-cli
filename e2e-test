@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# poor man's end-to-end test for s3
+
+export AWS_ACCESS_KEY_ID=minioadmin
+export AWS_SECRET_ACCESS_KEY=minioadmin
+
+storage_path="/tmp/aws-micro_e2etest_tmp-storage-for-minio"
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+NC='\033[0m'
+
+fail_and_exit() {
+  printf "${RED}Test failed!${NC}\n"
+  exit 1
+}
+
+# cleanup
+pkill -f "minio --quiet server ${storage_path}"
+rm -rf "${storage_path}"
+
+mkdir "${storage_path}"
+nix-shell -p minio minio-client --run "minio --quiet server ${storage_path} > /dev/null" &
+nix-shell -p awscli --run "aws s3api create-bucket --endpoint-url http://127.0.0.1:9000 --bucket test-bucket > /dev/null"
+
+# s3 cp <LocalPath> <S3Uri>
+./aws-micro s3 --endpoint-url http://127.0.0.1:9000 cp /etc/issue s3://test-bucket/ > /dev/null || fail_and_exit
+# s3 cp <S3Uri> <LocalPath>
+./aws-micro s3 --endpoint-url http://127.0.0.1:9000 cp s3://test-bucket/issue /tmp/.issue > /dev/null || fail_and_exit
+cmp --silent /etc/issue /tmp/.issue || fail_and_exit
+rm -f /tmp/.issue
+# s3 ls
+./aws-micro --endpoint-url http://127.0.0.1:9000 s3 ls | grep test-bucket > /dev/null || fail_and_exit
+./aws-micro s3 --endpoint-url http://127.0.0.1:9000 ls s3://test-bucket/ | grep issue > /dev/null || fail_and_exit
+
+
+pkill -f "minio --quiet server ${storage_path}"
+rm -r "${storage_path}"
+
+printf "${GREEN}Tests run successfully!${NC}\n"

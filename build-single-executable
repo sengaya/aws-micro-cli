@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+# poor man's release script
+
+filename=$1
+
+head -4 aws-micro > "${filename}"
+cat args.sh >> "${filename}"
+cat s3.sh >> "${filename}"
+cat utils.sh >> "${filename}"
+tail -n +8 aws-micro >> "${filename}"
+chmod 755 "${filename}"

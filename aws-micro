@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+set -o errexit -o pipefail -o noclobber -o nounset
+
+. utils.sh
+. args.sh
+. s3.sh
+
+get_args "$@"
+
+case "${_arg_command}" in
+  s3)
+    s3
+    ;;
+  help)
+    print_long_help
+    exit 0
+    ;;
+  *)
+    _PRINT_HELP=yes die "$0: error: argument command: Invalid choice, valid choices are:
+
+s3"
+    ;;
+esac
