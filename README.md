@@ -1,6 +1,6 @@
 ## aws-micro-cli
 
-This tool aims to be a minimalist replacement for the `aws` command line utility. It's implemented in Bash with only a few dependencies to other tools. It only supports a very limited number of commands and options but for these commands and options it aims to be as close as possible to the original. For example
+This tool aims to be a minimalist replacement for the `aws` command line utility. It's implemented in Bash with only a few dependencies to other tools. It can be used for example together with lightweight Linux distributions such as [Alpine Linux](https://alpinelinux.org/) to build very small docker images. It only supports a very limited number of commands and options but for these commands and options it aims to be as close as possible to the original. For example
 
 ```
     aws s3 cp foo.css s3://some-bucket/ --content-type text/css
@@ -17,17 +17,21 @@ This tool is not associated with Amazon in any way.
 
 ## Installation
 
-Make sure you have required unix tools installed. Assuming fresh installation of macOS and minimal docker container images for the Linux distributions, you need to install:
-
-- macos: -
-- centos: openssl, file
-- ubuntu: openssl, file, curl
-- debian: openssl, file, curl
-- alpine: openssl, file, curl, bash
-
 Download the latest release, move it to some convenient location (e.g. `/usr/local/bin/`), set the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` and you're ready to go.
 
-If you clone the repo, be aware that `aws-micro` sources additional files and can only be run from the repo directoy. The release version has everything merged into one single file.
+Make sure you have required unix tools installed. Assuming fresh installation of macOS and minimal docker container images for the Linux distributions, you need to install:
+
+| OS     | required packages   | optional packages |
+----------------------------------------------------
+| macos  | -                   | -                 |
+| centos | openssl             | file              |
+| ubuntu | openssl, curl       | file              |
+| debian | openssl, curl       | file              |
+| alpine | openssl, curl, bash | file              |
+
+The package `file` is needed for content type detection.
+
+If you clone the repo, be aware that `aws-micro` sources additional files and can only be run from the repo directory. The release version has everything merged into one single file.
 
 
 ## Compatibility
@@ -39,7 +43,8 @@ Credentials must be configured via the environment variables `AWS_ACCESS_KEY_ID`
 The region can be set either via command line option or `AWS_DEFAULT_REGION`.
 The output of `aws-micro` will in many cases differ from `aws`.
 
-The s3 commands work also with non-AWS services like [minio](https://github.com/minio/minio) and probably others.
+The s3 commands work also with S3-compatible services like [minio](https://github.com/minio/minio) and probably others.
+
 
 ## Supported commands and options
 
