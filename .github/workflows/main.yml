@@ -12,10 +12,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v2
-      - name: Install shellcheck
-        run: sudo apt-get update && sudo apt-get install -y shellcheck
       - name: Run shellcheck
-        run: shellcheck -x -a aws-micro
+        run: ./build-single-executable aws-micro-release && shellcheck aws-micro-release
   test:
     runs-on: ${{ matrix.os }}
     strategy:
