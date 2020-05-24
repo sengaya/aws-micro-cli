@@ -22,7 +22,7 @@ Download the latest release, move it to some convenient location (e.g. `/usr/loc
 Make sure you have required unix tools installed. Assuming fresh installation of macOS and minimal docker container images for the Linux distributions, you need to install:
 
 | OS     | required packages   | optional packages |
-----------------------------------------------------
+---------|---------------------|-------------------|
 | macos  | -                   | -                 |
 | centos | openssl             | file              |
 | ubuntu | openssl, curl       | file              |
