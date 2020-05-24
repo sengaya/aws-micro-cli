@@ -16,7 +16,13 @@ output_handler() {
 guess_mime() {
   declare -r file="${1}"
 
-  mime="$(file -b --mime-type "${file}")"
+  if hash file 2>/dev/null; then
+    mime="$(file -b --mime-type "${file}")"
+  else
+    >&2 echo "WARN - command 'file' not found, using default content type 'text/plain'"
+    mime='text/plain'
+  fi
+
   output_handler "${FUNCNAME[0]}" "$mime"
 }
 
