@@ -40,12 +40,12 @@
   [ "${_arg_subcommand}" = "ls" ]
 }
 
-@test "aws-micro s3 cp should fail if not at least 2 more subcommands" {
+@test "aws-micro s3 cp should fail if no path/s3uri set" {
   run ./aws-micro s3 cp
   [ "$status" -eq 1 ]
 }
 
-@test "aws-micro s3 cp should fail if not at least 2 more subcommands" {
+@test "aws-micro s3 cp should fail if only one path/s3uri set" {
   run ./aws-micro s3 cp foo
   [ "$status" -eq 1 ]
 }

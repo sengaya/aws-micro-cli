@@ -44,6 +44,10 @@ OPTIONS
        command without actually running them.
        (Contrary to aws-cli this will work on all commands)
 
+       --version (string)
+
+       Display the version of this tool.
+
 AVAILABLE SERVICES
        o s3
 "
@@ -62,6 +66,7 @@ To see help text, you can run:
 _positionals=()
 _arg_content_type=
 _arg_endpoint_url=
+_arg_no_guess_mime_type="off"
 region=
 DEBUG=0
 curl_output="-s -S"
@@ -79,6 +84,9 @@ parse_commandline() {
         ;;
       --dryrun)
         dryrun="echo"
+        ;;
+      --no-guess-mime-type)
+        _arg_no_guess_mime_type="on"
         ;;
       --content-type)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
