@@ -38,6 +38,7 @@ s3_ls() {
   signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
   authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
 
+  # shellcheck disable=SC2086
   ${dryrun} curl ${curl_output} --fail \
     "${request_url}" \
     -H "Authorization: ${authorization_header}" \
@@ -104,6 +105,7 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
   authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
 
   if [[ "${http_method}" == "PUT" ]]; then
+    # shellcheck disable=SC2086
     ${dryrun} curl ${curl_output} --fail -X "${http_method}" \
       "${request_url}" \
       -H "Authorization:${authorization_header}" \
@@ -111,8 +113,9 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
       --data-binary "@${source}"
     echo "upload: ${source} to s3://${bucket}/${key}"
   else
+    # shellcheck disable=SC2086
     ${dryrun} curl ${curl_output} --fail \
-      ${request_url} \
+      "${request_url}" \
       -H "Authorization: ${authorization_header}" \
       ${curl_headers} \
       -o "${destination}"
