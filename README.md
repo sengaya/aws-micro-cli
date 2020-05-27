@@ -61,6 +61,7 @@ Global options:
        --dryrun (boolean)
        (Contrary to aws-cli this will work on all commands)
 
+       --version (string)
 
 ### s3
 

@@ -44,6 +44,10 @@ OPTIONS
        command without actually running them.
        (Contrary to aws-cli this will work on all commands)
 
+       --version (string)
+
+       Display the version of this tool.
+
 AVAILABLE SERVICES
        o s3
 "
