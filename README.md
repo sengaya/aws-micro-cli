@@ -105,7 +105,8 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 ### [Unreleased]
 
 #### Changed
-* If `file` is missing, use default content type `text/plain` and warn user.
+* If `file` is missing, no content type is set and warning is print.
+* Option `--no-guess-mime-type` for `s3 cp` implemented.
 
 ### [0.1.0] - 2020-05-23
 
