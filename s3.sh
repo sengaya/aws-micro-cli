@@ -25,20 +25,23 @@ s3_ls() {
   fi
 
   http_method="GET"
+  content_sha256="${empty_string_sha256}"
   date="$(date -u +%Y%m%dT%H%M%SZ)"
   short_date="${date%%T*}"
 
   request_url="$(create_request_url "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
-  req="$(create_canonical_request "${s3url}" "${request_url}" "" "${date}" "" "")"
-  string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${req}")"
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "" "")"
+  canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
+  header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
+  curl_headers="$(echo "${canonical_and_signed_headers}" | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | grep -v host | sed -e 's/.*/-H &/')"
+  string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
   signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
+  authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
 
-  authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "host;x-amz-content-sha256;x-amz-date")"
   ${dryrun} curl ${curl_output} --fail \
     "${request_url}" \
     -H "Authorization: ${authorization_header}" \
-    -H "X-Amz-Content-SHA256: ${empty_string_sha256}" \
-    -H "X-Amz-Date: ${date}" | "${formatter}"
+    ${curl_headers} | "${formatter}"
 }
 
 s3_cp() {
@@ -68,44 +71,50 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
     key="$(get_key_from_s3url "$source")"
     content_md5=""
     content_type=""
+    content_sha256="${empty_string_sha256}"
+    request_url="$(create_request_url "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
   else
     http_method="PUT"
     bucket="$(get_bucket_from_s3url "${destination}")"
     key="$(get_key_from_s3url "${destination}")"
     content_md5="$(md5_base64 "${source}")"
-    content_type="${_arg_content_type:-$(guess_mime "${source}")}"
+    content_type="$(get_mime "${source}" "${_arg_content_type}" "${_arg_no_guess_mime_type}")"
     if [[ -z "$key" ]]; then
       key="${source##*/}"
     fi
+    request_url="$(create_request_url "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
+    protocol="$(get_protocol_from_request_url "${request_url}")"
+    if [[ "${protocol}" = "https" ]];then
+      content_sha256="UNSIGNED-PAYLOAD"
+    else
+      content_sha256="$(sha256 "${source}")"
+    fi
+
   fi
 
   date="$(date -u +%Y%m%dT%H%M%SZ)"
   short_date="${date%%T*}"
 
-  request_url="$(create_request_url "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
-  req="$(create_canonical_request "${source}" "${request_url}" "${bucket}" "${date}" "${content_md5}" "${content_type}")"
-  content_sha256="$(echo "${req}" | tail -1)"
-  string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${req}")"
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "${content_md5}" "${content_type}")"
+  canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
+  header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
+  curl_headers="$(echo "${canonical_and_signed_headers}" | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | grep -v host | sed -e 's/.*/-H &/')"
+  string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
   signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
+  authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
 
   if [[ "${http_method}" == "PUT" ]]; then
-    authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "content-md5;content-type;host;x-amz-content-sha256;x-amz-date")"
     ${dryrun} curl ${curl_output} --fail -X "${http_method}" \
       "${request_url}" \
-      -H "Authorization: ${authorization_header}" \
-      -H "Content-Type: ${content_type}" \
-      -H "X-Amz-Content-SHA256: ${content_sha256}" \
-      -H "X-Amz-Date: ${date}" \
-      -H "Content-MD5: ${content_md5}" \
+      -H "Authorization:${authorization_header}" \
+      ${curl_headers} \
       --data-binary "@${source}"
     echo "upload: ${source} to s3://${bucket}/${key}"
   else
-    authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "host;x-amz-content-sha256;x-amz-date")"
     ${dryrun} curl ${curl_output} --fail \
-      "${request_url}" \
+      ${request_url} \
       -H "Authorization: ${authorization_header}" \
-      -H "X-Amz-Content-SHA256: ${empty_string_sha256}" \
-      -H "X-Amz-Date: ${date}" \
+      ${curl_headers} \
       -o "${destination}"
   fi
 }

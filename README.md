@@ -81,6 +81,7 @@ Not supported:
 Options:
 
     --content-type (string)
+    --no-guess-mime-type (boolean)
 
 ---
 

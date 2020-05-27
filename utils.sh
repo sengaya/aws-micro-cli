@@ -13,14 +13,20 @@ output_handler() {
   fi
 }
 
-guess_mime() {
+get_mime() {
   declare -r file="${1}"
+  declare -r custom_content_type="${2}"
+  declare -r no_guess_mime_type_flag="${3}"
 
-  if hash file 2>/dev/null; then
+  if [[ "${no_guess_mime_type_flag}" = "on" ]]; then
+    mime=""
+  elif [[ -n "${custom_content_type}" ]]; then
+    mime="${custom_content_type}"
+  elif hash file 2>/dev/null; then
     mime="$(file -b --mime-type "${file}")"
   else
-    >&2 echo "WARN - command 'file' not found, using default content type 'text/plain'"
-    mime='text/plain'
+    >&2 echo "WARN - command 'file' not found, no content type set"
+    mime=""
   fi
 
   output_handler "${FUNCNAME[0]}" "$mime"
@@ -108,48 +114,53 @@ get_canonical_uri() {
   output_handler "${FUNCNAME[0]}" "/${remove_protocol#*/}"
 }
 
-create_canonical_request() {
-  declare -r source="${1}"
+create_canonical_and_signed_headers() {
+  declare -r http_method="${1}"
   declare -r request_url="${2}"
-  declare -r bucket="${3}"
+  declare -r content_sha256="${3}"
   declare -r date="${4}"
   declare -r content_md5="${5}"
   declare -r content_type="${6}"
 
-  canonical_uri="$(get_canonical_uri "${request_url}")"
   host="$(get_host_from_request_url "$request_url")"
 
-  if [[ "${source}" == "" ]] || is_s3url "$source"; then
-    http_method="GET"
-    content_sha256="${empty_string_sha256}"
-    canonical_headers="host:$host
-x-amz-content-sha256:$content_sha256
-x-amz-date:$date
+  if [[ "${http_method}" == "GET" ]]; then
+    canonical_headers="host:${host}
+x-amz-content-sha256:${content_sha256}
+x-amz-date:${date}
 
 host;x-amz-content-sha256;x-amz-date"
 
   else
-    http_method="PUT"
-    protocol="$(get_protocol_from_request_url "$request_url")"
-    if [[ "$protocol" = "https" ]];then
-      content_sha256="UNSIGNED-PAYLOAD"
+    if [[ "${content_type}" = "" ]]; then
+      content_type_line=""
+      content_type_header=""
     else
-      content_sha256="$(sha256 "$source")"
+      content_type_line=$'\n'"content-type:${content_type}"
+      content_type_header="content-type;"
     fi
-    canonical_headers="content-md5:$content_md5
-content-type:$content_type
-host:$host
-x-amz-content-sha256:$content_sha256
-x-amz-date:$date
+    canonical_headers="content-md5:${content_md5}${content_type_line}
+host:${host}
+x-amz-content-sha256:${content_sha256}
+x-amz-date:${date}
 
-content-md5;content-type;host;x-amz-content-sha256;x-amz-date"
+content-md5;${content_type_header}host;x-amz-content-sha256;x-amz-date"
   fi
+  output_handler "${FUNCNAME[0]}" "${canonical_headers}"
+}
 
-  output_handler "${FUNCNAME[0]}" "$http_method
-$canonical_uri
+create_canonical_request() {
+  declare -r http_method="${1}"
+  declare -r request_url="${2}"
+  declare -r canonical_headers="${3}"
+  declare -r content_sha256="${4}"
 
-$canonical_headers
-$content_sha256"
+  canonical_uri="$(get_canonical_uri "${request_url}")"
+  output_handler "${FUNCNAME[0]}" "${http_method}
+${canonical_uri}
+
+${canonical_headers}
+${content_sha256}"
 }
 
 create_string_to_sign() {
