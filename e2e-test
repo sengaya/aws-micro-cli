@@ -4,37 +4,45 @@
 
 export AWS_ACCESS_KEY_ID=minioadmin
 export AWS_SECRET_ACCESS_KEY=minioadmin
+export MINIO_ACCESS_KEY=minioadmin
+export MINIO_SECRET_KEY=minioadmin
+
+NORMAL=$(tput sgr0)
+RED=$(tput setaf 1)
+GREEN=$(tput setaf 2)
 
 storage_path="/tmp/aws-micro_e2etest_tmp-storage-for-minio"
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-NC='\033[0m'
 
 fail_and_exit() {
-  printf "${RED}Test failed!${NC}\n"
+  echo "${RED}Test failed!${NORMAL}"
   exit 1
 }
 
-# cleanup
+# cleanup previous failed runs
 pkill -f "minio --quiet server ${storage_path}"
 rm -rf "${storage_path}"
 
+# init
 mkdir "${storage_path}"
 nix-shell -p minio minio-client --run "minio --quiet server ${storage_path} > /dev/null" &
 nix-shell -p awscli --run "aws s3api create-bucket --endpoint-url http://127.0.0.1:9000 --bucket test-bucket > /dev/null"
 
+
 # s3 cp <LocalPath> <S3Uri>
-./aws-micro s3 --endpoint-url http://127.0.0.1:9000 cp /etc/issue s3://test-bucket/ > /dev/null || fail_and_exit
+./aws-micro s3 --endpoint-url http://127.0.0.1:9000 cp aws-micro s3://test-bucket/ > /dev/null || fail_and_exit
+./aws-micro s3 --endpoint-url http://127.0.0.1:9000 cp aws-micro s3://test-bucket/ --content-type foo/bar > /dev/null || fail_and_exit
+./aws-micro s3 --endpoint-url http://127.0.0.1:9000 cp aws-micro s3://test-bucket/ --no-guess-mime-type > /dev/null || fail_and_exit
 # s3 cp <S3Uri> <LocalPath>
-./aws-micro s3 --endpoint-url http://127.0.0.1:9000 cp s3://test-bucket/issue /tmp/.issue > /dev/null || fail_and_exit
-cmp --silent /etc/issue /tmp/.issue || fail_and_exit
-rm -f /tmp/.issue
+./aws-micro s3 --endpoint-url http://127.0.0.1:9000 cp s3://test-bucket/aws-micro /tmp/.aws-micro > /dev/null || fail_and_exit
+cmp --silent aws-micro /tmp/.aws-micro || fail_and_exit
+rm -f /tmp/.aws-micro
 # s3 ls
 ./aws-micro --endpoint-url http://127.0.0.1:9000 s3 ls | grep test-bucket > /dev/null || fail_and_exit
-./aws-micro s3 --endpoint-url http://127.0.0.1:9000 ls s3://test-bucket/ | grep issue > /dev/null || fail_and_exit
+./aws-micro s3 --endpoint-url http://127.0.0.1:9000 ls s3://test-bucket/ | grep aws-micro > /dev/null || fail_and_exit
 
 
+# cleanup
 pkill -f "minio --quiet server ${storage_path}"
 rm -r "${storage_path}"
 
-printf "${GREEN}Tests run successfully!${NC}\n"
+echo "${GREEN}Tests run successfully!${NORMAL}"
