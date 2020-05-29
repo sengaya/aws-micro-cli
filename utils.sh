@@ -132,19 +132,25 @@ x-amz-date:${date}
 host;x-amz-content-sha256;x-amz-date"
 
   else
+    if [[ "${content_md5}" = "" ]]; then
+      content_md5_line=""
+      content_md5_header=""
+    else
+      content_md5_line="content-md5:${content_md5}"$'\n'
+      content_md5_header="content-md5;"
+    fi
     if [[ "${content_type}" = "" ]]; then
       content_type_line=""
       content_type_header=""
     else
-      content_type_line=$'\n'"content-type:${content_type}"
+      content_type_line="content-type:${content_type}"$'\n'
       content_type_header="content-type;"
     fi
-    canonical_headers="content-md5:${content_md5}${content_type_line}
-host:${host}
+    canonical_headers="${content_md5_line}${content_type_line}host:${host}
 x-amz-content-sha256:${content_sha256}
 x-amz-date:${date}
 
-content-md5;${content_type_header}host;x-amz-content-sha256;x-amz-date"
+${content_md5_header}${content_type_header}host;x-amz-content-sha256;x-amz-date"
   fi
   output_handler "${FUNCNAME[0]}" "${canonical_headers}"
 }
@@ -225,6 +231,8 @@ create_request_url() {
     [[ "${custom_endpoint}" == */ ]] && endpoint="$custom_endpoint" || endpoint="$custom_endpoint/"
     if [[ -z "${bucket}" && -z "${key}" ]]; then
       output_handler "${FUNCNAME[0]}" "${endpoint}"
+    elif [[ -z "${key}" ]]; then
+      output_handler "${FUNCNAME[0]}" "${endpoint}${bucket}"
     else
       output_handler "${FUNCNAME[0]}" "${endpoint}${bucket}/${key}"
     fi

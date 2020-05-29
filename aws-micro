@@ -5,12 +5,16 @@ set -o errexit -o pipefail -o noclobber -o nounset
 . utils.sh
 . args.sh
 . s3.sh
+. s3api.sh
 
 get_args "$@"
 
 case "${_arg_command}" in
   s3)
     s3
+    ;;
+  s3api)
+    s3api
     ;;
   help)
     print_long_help
