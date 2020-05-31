@@ -5,9 +5,10 @@
 filename=$1
 
 head -4 aws-micro > "${filename}"
-cat args.sh >> "${filename}"
-cat s3.sh >> "${filename}"
-cat s3api.sh >> "${filename}"
-cat utils.sh >> "${filename}"
-tail -n +9 aws-micro >> "${filename}"
+{ cat args.sh;
+  cat s3.sh;
+  cat s3api.sh;
+  cat utils.sh;
+  tail -n +9 aws-micro;
+} >> "${filename}"
 chmod 755 "${filename}"

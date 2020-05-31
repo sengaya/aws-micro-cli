@@ -14,7 +14,6 @@ can be replaced with the exact same commands/options
 
 This tool is not associated with Amazon in any way.
 
-
 ## Installation
 
 Download the latest release, move it to some convenient location (e.g. `/usr/local/bin/`), set the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` and you're ready to go.
@@ -22,7 +21,7 @@ Download the latest release, move it to some convenient location (e.g. `/usr/loc
 Make sure you have required unix tools installed. Assuming fresh installation of macOS and minimal docker container images for the Linux distributions, you need to install:
 
 | OS     | required packages   | optional packages |
----------|---------------------|-------------------|
+| ------ | ------------------- | ----------------- |
 | macos  | -                   | -                 |
 | centos | openssl             | file              |
 | ubuntu | openssl, curl       | file              |
@@ -43,7 +42,6 @@ The region can be set either via command line option or `AWS_DEFAULT_REGION`.
 The output of `aws-micro` will in many cases differ from `aws`.
 
 The s3 commands work also with S3-compatible services like [minio](https://github.com/minio/minio) and probably others.
-
 
 ## Supported commands and options
 
@@ -120,6 +118,10 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 - If `file` is missing, no content type is set and warning is print.
 - When region us-east-1 is set, the local endpoint will be used (e.g. `bucket.s3.us-east-1.amazonaws.com`) instead of the global one.
 
+#### Fixed
+
+- Environment variable `AWS_DEFAULT_REGION` was ignored
+
 ### [0.1.0] - 2020-05-23
 
 - Initial public release.
@@ -128,19 +130,18 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 
 Pull requests are welcome. The unit tests are written with https://github.com/bats-core/bats-core. Make use of the excellent tool `shellcheck` (https://www.shellcheck.net/). Run with `shellcheck -x -a aws-micro`.
 
-
 ## License
 
 Copyright 2020 Thilo Uttendorfer
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License.
+it under the terms of the GNU General Public License version 3 as
+published by the Free Software Foundation.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+along with this program. If not, see <https://www.gnu.org/licenses/>.

@@ -50,6 +50,8 @@ OPTIONS
 
 AVAILABLE SERVICES
        o s3
+
+       o s3api
 "
 }
 
@@ -107,9 +109,6 @@ parse_commandline() {
       --region)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
         region="$2"
-        if [[ -z "${region}" ]]; then
-          region="${AWS_DEFAULT_REGION:-}"
-        fi
         shift
         ;;
       --version)
@@ -147,4 +146,7 @@ get_args() {
   handle_passed_args_count
   assign_positional_args 1 "${_positionals[@]}"
   service="${_arg_command:-}"
+  if [[ -z "${region}" ]]; then
+    region="${AWS_DEFAULT_REGION:-}"
+  fi
 }
