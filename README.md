@@ -33,10 +33,9 @@ The package `file` is needed for content type detection.
 
 If you clone the repo, be aware that `aws-micro` sources additional files and can only be run from the repo directory. The release version has everything merged into one single file.
 
-
 ## Compatibility
 
-Supported services: `s3`
+Supported services: `s3`, `s3api`
 
 Configuration settings and credentials set in `~/.aws` are ignored.
 Credentials must be configured via the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
@@ -92,6 +91,13 @@ No additional option supported.
 
 Known bug: Listing keys inside directories is not working correctly.
 
+### s3api
+
+    create-bucket
+
+Options:
+
+    --bucket <value>
 
 ## Changelog
 
@@ -104,14 +110,19 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 
 ### [Unreleased]
 
+#### Added
+
+- Option `--no-guess-mime-type` for `s3 cp` implemented.
+- Command `s3api create-bucket` implemented.
+
 #### Changed
-* If `file` is missing, no content type is set and warning is print.
-* Option `--no-guess-mime-type` for `s3 cp` implemented.
+
+- If `file` is missing, no content type is set and warning is print.
+- When region us-east-1 is set, the local endpoint will be used (e.g. `bucket.s3.us-east-1.amazonaws.com`) instead of the global one.
 
 ### [0.1.0] - 2020-05-23
 
-* Initial public release.
-
+- Initial public release.
 
 ## Contributing
 

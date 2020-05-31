@@ -125,6 +125,12 @@
   [ "$output" = "/" ]
 }
 
+@test "get_canonical_uri should return /bucket for request_url with custom host and only bucket" {
+  run get_canonical_uri "http://127.0.0.1:9000/bucket"
+  [ "$status" -eq 0 ]
+  [ "$output" = "/bucket" ]
+}
+
 @test "create_canonical_and_signed_headers with custom endpoint should return a valid response" {
   run create_canonical_and_signed_headers "PUT" "http://127.0.0.1:9000/bucket/key" "1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f" "20200525T185439Z" "OnjOwdnDQYeocbNO+GjERg==" "text/plain"
   [ "$status" -eq 0 ]
@@ -283,7 +289,13 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
 @test "create_request_url should return a valid endpoint (us-east-1)" {
   run create_request_url "" "us-east-1" "bucket" "key"
   [ "$status" -eq 0 ]
-  [ "$output" = "https://bucket.s3.amazonaws.com/key" ]
+  [ "$output" = "https://bucket.s3.us-east-1.amazonaws.com/key" ]
+}
+
+@test "create_request_url should return a valid endpoint (us-east-1, only bucket)" {
+  run create_request_url "" "us-east-1" "bucket" ""
+  [ "$status" -eq 0 ]
+  [ "$output" = "https://bucket.s3.us-east-1.amazonaws.com/" ]
 }
 
 @test "create_request_url should return a valid endpoint (other region)" {
@@ -296,6 +308,12 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
   run create_request_url "https://custom.endpoint" "eu-central-1" "bucket" "key"
   [ "$status" -eq 0 ]
   [ "$output" = "https://custom.endpoint/bucket/key" ]
+}
+
+@test "create_request_url should return a valid endpoint (custom endpoint, only bucket)" {
+  run create_request_url "https://custom.endpoint/" "foo" "bucket" ""
+  [ "$status" -eq 0 ]
+  [ "$output" = "https://custom.endpoint/bucket" ]
 }
 
 @test "create_request_url should return a valid endpoint (custom endpoint, no bucket/key)" {
@@ -373,11 +391,15 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
   [ "$output" = "" ]
 }
 
-
 @test "get_mime should return custom mime type when set" {
   echo foo > .test.txt
   run get_mime ".test.txt" "text/css" "off"
   rm .test.txt
   [ "$status" -eq 0 ]
   [ "$output" = "text/css" ]
+}
+
+@test "s3api_create-bucket should fail if --bucket is not set" {
+  run ./aws-micro s3api create-bucket
+  [ "$status" -eq 1 ]
 }

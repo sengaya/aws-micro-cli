@@ -64,6 +64,7 @@ To see help text, you can run:
 }
 
 _positionals=()
+_arg_bucket=
 _arg_content_type=
 _arg_endpoint_url=
 _arg_no_guess_mime_type="off"
@@ -91,6 +92,11 @@ parse_commandline() {
       --content-type)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
         _arg_content_type="$2"
+        shift
+        ;;
+      --bucket)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_bucket="$2"
         shift
         ;;
       --endpoint-url)
