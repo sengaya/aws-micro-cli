@@ -214,18 +214,12 @@ create_request_url() {
   declare -r key="${4}"
 
   if [[ -z "${custom_endpoint}" ]];then
-    if [[ "${region}" = "us-east-1" ]];then
-      if [[ -z "${bucket}" ]]; then
-        output_handler "${FUNCNAME[0]}" "https://s3.amazonaws.com/"
-      else
-        output_handler "${FUNCNAME[0]}" "https://${bucket}.s3.amazonaws.com/${key}"
-      fi
+    if [[ -z "${bucket}" && -z "${key}" ]]; then
+      output_handler "${FUNCNAME[0]}" "https://s3.${region}.amazonaws.com/"
+    elif [[ -z "${key}" ]]; then
+      output_handler "${FUNCNAME[0]}" "https://${bucket}.s3.${region}.amazonaws.com/"
     else
-      if [[ -z "${bucket}" ]]; then
-        output_handler "${FUNCNAME[0]}" "https://s3.${region}.amazonaws.com/"
-      else
-        output_handler "${FUNCNAME[0]}" "https://${bucket}.s3.${region}.amazonaws.com/${key}"
-      fi
+      output_handler "${FUNCNAME[0]}" "https://${bucket}.s3.${region}.amazonaws.com/${key}"
     fi
   else
     [[ "${custom_endpoint}" == */ ]] && endpoint="$custom_endpoint" || endpoint="$custom_endpoint/"

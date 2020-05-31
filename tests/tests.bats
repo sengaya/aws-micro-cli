@@ -289,7 +289,13 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
 @test "create_request_url should return a valid endpoint (us-east-1)" {
   run create_request_url "" "us-east-1" "bucket" "key"
   [ "$status" -eq 0 ]
-  [ "$output" = "https://bucket.s3.amazonaws.com/key" ]
+  [ "$output" = "https://bucket.s3.us-east-1.amazonaws.com/key" ]
+}
+
+@test "create_request_url should return a valid endpoint (us-east-1, only bucket)" {
+  run create_request_url "" "us-east-1" "bucket" ""
+  [ "$status" -eq 0 ]
+  [ "$output" = "https://bucket.s3.us-east-1.amazonaws.com/" ]
 }
 
 @test "create_request_url should return a valid endpoint (other region)" {
