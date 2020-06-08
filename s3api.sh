@@ -26,6 +26,7 @@ s3api_create-bucket() {
   ${dryrun} curl ${curl_output} --fail -X "${http_method}" \
     "${request_url}" \
     -H "Authorization:${authorization_header}" \
+    -H "Content-Length: 0" \
     ${curl_headers}
 }
 

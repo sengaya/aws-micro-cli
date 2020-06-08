@@ -27,7 +27,7 @@ rm -rf "${storage_path}"
 mkdir -p "${storage_path}"
 ./build-single-executable "${e2e_path}/aws-micro"
 nix-shell -p minio minio-client --run "minio --quiet server --address :19999 ${storage_path} > /dev/null" &
-sleep 1
+sleep 3 # minio needs some time to start up
 
 # s3api create-bucket
 "${e2e_path}/aws-micro" s3api create-bucket --endpoint-url http://127.0.0.1:19999 --bucket test-bucket || fail_and_exit

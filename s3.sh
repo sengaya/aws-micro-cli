@@ -119,6 +119,7 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
       -H "Authorization: ${authorization_header}" \
       ${curl_headers} \
       -o "${destination}"
+    echo "download: ${source} to ${destination}"
   fi
 }
 

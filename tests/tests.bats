@@ -341,6 +341,13 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
 2020-05-13 07:26:37 test-bucket2" ]
 }
 
+@test "xml_to_text_for_buckets should return list of buckets (time format from moto)" {
+  output="$(echo '<?xml version="1.0" encoding="UTF-8"?>
+#<ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Owner><ID>17be0943d07d67113ab42f028a8bd346a913fc98d79da0dfb84754dee3a89aca</ID><DisplayName></DisplayName></Owner><Buckets><Bucket><Name>test-bucket</Name><CreationDate>2020-05-02 21:55:23.123456</CreationDate></Bucket><Bucket><Name>test-bucket2</Name><CreationDate>2020-05-13 07:26:37.654321</CreationDate></Bucket></Buckets></ListAllMyBucketsResult>' | xml_to_text_for_buckets)"
+  [ "$output" = "2020-05-02 21:55:23 test-bucket
+2020-05-13 07:26:37 test-bucket2" ]
+}
+
 @test "xml_to_text_for_keys should return list of keys" {
   output="$(echo '<?xml version="1.0" encoding="UTF-8"?>
 <ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>test-bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>10000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>test.txt</Key><LastModified>2020-05-18T19:53:40.926Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>17be0943d07d67113ab42f028a8bd346a913fc98d79da0dfb84754dee3a89aca</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents></ListBucketResult>' | xml_to_text_for_keys)"

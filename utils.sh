@@ -236,16 +236,14 @@ create_request_url() {
 xml_to_text_for_buckets() {
   # 1) add newlines to have each bucket in a seperate line
   # 2) grep for lines with buckets
-  # 3) add spaces before tags
-  # 4) add spaces after tags
-  # 5) get bucket name and date and reformat
+  # 3) remove tags
+  # 4) get bucket name and date and reformat
 
   # for macos/bsd compatility we use a quoted string in sed, see https://stackoverflow.com/a/18410122/1306877
   sed -E -e $'s:</?Buckets?>:&\\\n:g' \
   | grep '^<Name>' \
-  | sed -e 's:<: &:g' \
-  | sed -e 's:>:& :g' \
-  | while read -r _ bucket _ _  datetime_orig _; do
+  | sed -e 's/<[^>]*>/ /g' \
+  | while read -r bucket datetime_orig; do
       datetime="${datetime_orig/T/ }"
       echo "${datetime%.*} ${bucket}"
     done
