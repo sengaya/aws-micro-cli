@@ -304,6 +304,12 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
   [ "$output" = "https://bucket.s3.eu-central-1.amazonaws.com/key" ]
 }
 
+@test "create_request_url should return a valid endpoint (no region, only bucket)" {
+  run create_request_url "" "" "bucket" ""
+  [ "$status" -eq 0 ]
+  [ "$output" = "https://bucket.s3.amazonaws.com/" ]
+}
+
 @test "create_request_url should return a valid endpoint (custom endpoint)" {
   run create_request_url "https://custom.endpoint" "eu-central-1" "bucket" "key"
   [ "$status" -eq 0 ]

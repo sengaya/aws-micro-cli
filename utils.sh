@@ -215,22 +215,24 @@ create_request_url() {
 
   if [[ -z "${custom_endpoint}" ]];then
     if [[ -z "${bucket}" && -z "${key}" ]]; then
-      output_handler "${FUNCNAME[0]}" "https://s3.${region}.amazonaws.com/"
+      url="https://s3.${region}.amazonaws.com/"
     elif [[ -z "${key}" ]]; then
-      output_handler "${FUNCNAME[0]}" "https://${bucket}.s3.${region}.amazonaws.com/"
+      url="https://${bucket}.s3.${region}.amazonaws.com/"
     else
-      output_handler "${FUNCNAME[0]}" "https://${bucket}.s3.${region}.amazonaws.com/${key}"
+      url="https://${bucket}.s3.${region}.amazonaws.com/${key}"
     fi
   else
     [[ "${custom_endpoint}" == */ ]] && endpoint="$custom_endpoint" || endpoint="$custom_endpoint/"
     if [[ -z "${bucket}" && -z "${key}" ]]; then
-      output_handler "${FUNCNAME[0]}" "${endpoint}"
+      url="${endpoint}"
     elif [[ -z "${key}" ]]; then
-      output_handler "${FUNCNAME[0]}" "${endpoint}${bucket}"
+      url="${endpoint}${bucket}"
     else
-      output_handler "${FUNCNAME[0]}" "${endpoint}${bucket}/${key}"
+      url="${endpoint}${bucket}/${key}"
     fi
   fi
+
+  output_handler "${FUNCNAME[0]}" "${url//../.}" # replace .. with . in case no region given
 }
 
 xml_to_text_for_buckets() {
