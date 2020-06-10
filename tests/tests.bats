@@ -388,6 +388,22 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
 2020-05-18 19:53:40          4 upload.txt" ]
 }
 
+@test "xml_to_text_for_keys should return also prefixes" {
+  output="$(echo '<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>landsat-pds</Name><Prefix></Prefix><KeyCount>12</KeyCount><MaxKeys>1000</MaxKeys><Delimiter>/</Delimiter><EncodingType>url</EncodingType><IsTruncated>false</IsTruncated><Contents><Key>index.html</Key><LastModified>2017-05-17T13:42:27.000Z</LastModified><ETag>&quot;ed18c8120c2e8303024d560d1a618158&quot;</ETag><Size>23767</Size><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>robots.txt</Key><LastModified>2016-08-19T17:12:04.000Z</LastModified><ETag>&quot;b4714554348d9b6c1df58ddf5da4b14c&quot;</ETag><Size>105</Size><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>run_info.json</Key><LastModified>2020-06-10T14:52:05.000Z</LastModified><ETag>&quot;20a76d643fddd15ad61cb29b423021c4&quot;</ETag><Size>73</Size><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>run_list.txt</Key><LastModified>2020-06-10T14:52:05.000Z</LastModified><ETag>&quot;31febe6e72a2a2fdcc014f557f2b25c3&quot;</ETag><Size>3550</Size><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>scene_list.gz</Key><LastModified>2018-08-29T00:45:15.000Z</LastModified><ETag>&quot;39c34d489777a595b36d0af5726007db&quot;</ETag><Size>45603307</Size><StorageClass>INTELLIGENT_TIERING</StorageClass></Contents><CommonPrefixes><Prefix>L8/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>c08f0e10-3a51-4a81-817f-76e5a3fcfff5/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>c1/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>runs/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>tarq/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>tarq_corrupt/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>test/</Prefix></CommonPrefixes></ListBucketResult>' | xml_to_text_for_keys)"
+  [ "$output" = "                           PRE L8/
+                           PRE c08f0e10-3a51-4a81-817f-76e5a3fcfff5/
+                           PRE c1/
+                           PRE runs/
+                           PRE tarq/
+                           PRE tarq_corrupt/
+                           PRE test/
+2017-05-17 13:42:27      23767 index.html
+2016-08-19 17:12:04        105 robots.txt
+2020-06-10 14:52:05         73 run_info.json
+2020-06-10 14:52:05       3550 run_list.txt
+2018-08-29 00:45:15   45603307 scene_list.gz" ]
+}
+
 @test "get_mime should return text/plain" {
   echo foo > .test.txt
   run get_mime ".test.txt" "" ""

@@ -252,15 +252,15 @@ xml_to_text_for_buckets() {
 }
 
 xml_to_text_for_keys() {
-  # 1) add newlines to have each key in a seperate line
-  # 2) grep for lines with keys
+  # 1) add newlines to have each key/prefix in a seperate line
+  # 2) grep for lines with keys/prefixes
   # 3) add spaces before tags
   # 4) add spaces after tags
-  # 5) get key name, size and date and reformat
+  # 5) get key/prefix name, size and date and reformat
 
   # for macos/bsd compatility we use a quoted string in sed, see https://stackoverflow.com/a/18410122/1306877
-  sed -E -e $'s:</?Contents?>:&\\\n:g' \
-  | grep '^<Key>' \
+  sed -E -e $'s:</?(Contents|CommonPrefixes)?>:&\\\n:g' \
+  | grep -e '^<Key>' -e '^<Prefix>' \
   | sed -e 's:<: &:g' \
   | sed -e 's:>:& :g' \
   | while read -r _ key _ _ datetime_orig _ _ _ _ _ size _; do

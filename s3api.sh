@@ -15,19 +15,24 @@ s3api_create-bucket() {
   bucket="${_arg_bucket}"
   content_sha256="${empty_string_sha256}"
   request_url="$(create_request_url "${_arg_endpoint_url}" "${region}" "${bucket}" "")"
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "" "")"
-  canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
-  header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
-  curl_headers="$(echo "${canonical_and_signed_headers}" | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | grep -v host | sed -e 's/.*/-H &/')"
-  string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
-  signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
-  authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
-  # shellcheck disable=SC2086
-  ${dryrun} curl ${curl_output} --fail -X "${http_method}" \
-    "${request_url}" \
-    -H "Authorization:${authorization_header}" \
-    -H "Content-Length: 0" \
-    ${curl_headers}
+
+  if [[ "${_arg_no_sign_request}" = "on" ]]; then
+      ${dryrun} curl ${curl_output} --fail -X "${http_method}" "${request_url}" -H "Content-Length: 0" > /dev/null
+  else
+    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "" "")"
+    canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
+    header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
+    curl_headers="$(echo "${canonical_and_signed_headers}" | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | grep -v host | sed -e 's/.*/-H &/')"
+    string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
+    signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
+    authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
+    # shellcheck disable=SC2086
+    ${dryrun} curl ${curl_output} --fail -X "${http_method}" \
+      "${request_url}" \
+      -H "Authorization:${authorization_header}" \
+      -H "Content-Length: 0" \
+      ${curl_headers}  > /dev/null
+  fi
 }
 
 s3api() {

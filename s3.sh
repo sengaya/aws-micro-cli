@@ -31,19 +31,25 @@ s3_ls() {
   short_date="${date%%T*}"
 
   request_url="$(create_request_url "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "" "")"
-  canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
-  header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
-  curl_headers="$(echo "${canonical_and_signed_headers}" | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | grep -v host | sed -e 's/.*/-H &/')"
-  string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
-  signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
-  authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
 
-  # shellcheck disable=SC2086
-  ${dryrun} curl ${curl_output} --fail \
-    "${request_url}" \
-    -H "Authorization: ${authorization_header}" \
-    ${curl_headers} | "${formatter}"
+  if [[ "${_arg_no_sign_request}" = "on" ]]; then
+    ${dryrun} curl ${curl_output} --fail \
+      "${request_url}?list-type=2&prefix=&delimiter=%2F&encoding-type=url" | "${formatter}"
+  else
+    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "" "")"
+    canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
+    header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
+    curl_headers="$(echo "${canonical_and_signed_headers}" | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | grep -v host | sed -e 's/.*/-H &/')"
+    string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
+    signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
+    authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
+
+    # shellcheck disable=SC2086
+    ${dryrun} curl ${curl_output} --fail \
+      "${request_url}" \
+      -H "Authorization: ${authorization_header}" \
+      ${curl_headers} | "${formatter}"
+    fi
 }
 
 s3_cp() {
@@ -94,33 +100,43 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
 
   fi
 
-  date="$(date -u +%Y%m%dT%H%M%SZ)"
-  short_date="${date%%T*}"
-
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "${content_md5}" "${content_type}")"
-  canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
-  header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
-  curl_headers="$(echo "${canonical_and_signed_headers}" | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | grep -v host | sed -e 's/.*/-H &/')"
-  string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
-  signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
-  authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
-
-  if [[ "${http_method}" == "PUT" ]]; then
-    # shellcheck disable=SC2086
-    ${dryrun} curl ${curl_output} --fail -X "${http_method}" \
-      "${request_url}" \
-      -H "Authorization:${authorization_header}" \
-      ${curl_headers} \
-      --data-binary "@${source}"
-    echo "upload: ${source} to s3://${bucket}/${key}"
+  if [[ "${_arg_no_sign_request}" = "on" ]]; then
+    if [[ "${http_method}" == "PUT" ]]; then
+      ${dryrun} curl ${curl_output} --fail -X "${http_method}" "${request_url}" --data-binary "@${source}" > /dev/null
+      echo "upload: ${source} to s3://${bucket}/${key}"
+    else
+      ${dryrun} curl ${curl_output} --fail "${request_url}" -o "${destination}"
+      echo "download: ${source} to ${destination}"
+    fi
   else
-    # shellcheck disable=SC2086
-    ${dryrun} curl ${curl_output} --fail \
-      "${request_url}" \
-      -H "Authorization: ${authorization_header}" \
-      ${curl_headers} \
-      -o "${destination}"
-    echo "download: ${source} to ${destination}"
+    date="$(date -u +%Y%m%dT%H%M%SZ)"
+    short_date="${date%%T*}"
+
+    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "${content_md5}" "${content_type}")"
+    canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
+    header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
+    curl_headers="$(echo "${canonical_and_signed_headers}" | sed -e :a -e '$d;N;2,2ba' -e 'P;D' | grep -v host | sed -e 's/.*/-H &/')"
+    string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
+    signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
+    authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
+
+    if [[ "${http_method}" == "PUT" ]]; then
+      # shellcheck disable=SC2086
+      ${dryrun} curl ${curl_output} --fail -X "${http_method}" \
+        "${request_url}" \
+        -H "Authorization:${authorization_header}" \
+        ${curl_headers} \
+        --data-binary "@${source}" > /dev/null
+      echo "upload: ${source} to s3://${bucket}/${key}"
+    else
+      # shellcheck disable=SC2086
+      ${dryrun} curl ${curl_output} --fail \
+        "${request_url}" \
+        -H "Authorization: ${authorization_header}" \
+        ${curl_headers} \
+        -o "${destination}"
+      echo "download: ${source} to ${destination}"
+    fi
   fi
 }
 

@@ -30,6 +30,12 @@ OPTIONS
 
        Turn on debug logging.
 
+       --dryrun  (boolean)
+
+       Displays  the  operations  that  would be performed using the specified
+       command without actually running them.
+       (Contrary to aws-cli this will work on all commands)
+
        --endpoint-url (string)
 
        Override command's default URL with the given URL.
@@ -38,15 +44,14 @@ OPTIONS
 
        The region to use. Overrides config/env settings.
 
-       --dryrun  (boolean)
-
-       Displays  the  operations  that  would be performed using the specified
-       command without actually running them.
-       (Contrary to aws-cli this will work on all commands)
-
        --version (string)
 
        Display the version of this tool.
+
+       --no-sign-request (boolean)
+
+       Do  not  sign requests. Credentials will not be loaded if this argument
+       is provided.
 
 AVAILABLE SERVICES
        o s3
@@ -70,6 +75,7 @@ _arg_bucket=
 _arg_content_type=
 _arg_endpoint_url=
 _arg_no_guess_mime_type="off"
+_arg_no_sign_request="off"
 region=
 DEBUG=0
 curl_output="-s -S"
@@ -90,6 +96,9 @@ parse_commandline() {
         ;;
       --no-guess-mime-type)
         _arg_no_guess_mime_type="on"
+        ;;
+      --no-sign-request)
+        _arg_no_sign_request="on"
         ;;
       --content-type)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1

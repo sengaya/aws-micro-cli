@@ -51,14 +51,16 @@ Global options:
 
        --debug (boolean)
 
+       --dryrun (boolean)
+       (Contrary to aws-cli this will work on all commands)
+
        --endpoint-url (string)
 
        --region (string)
 
-       --dryrun (boolean)
-       (Contrary to aws-cli this will work on all commands)
-
        --version (string)
+
+       --no-sign-request (boolean)
 
 ### s3
 
@@ -111,6 +113,7 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 #### Added
 
 - Option `--no-guess-mime-type` for `s3 cp` implemented.
+- Option `--no-sign-request` implemented.
 - Command `s3api create-bucket` implemented.
 
 #### Changed
@@ -123,6 +126,8 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 - Environment variable `AWS_DEFAULT_REGION` was ignored
 - Handle different date format when listing buckets
 - Output was missing when downloading files from S3
+- s3 ls works now also without s3:// prefix
+- Support of AWS S3 global endpoint if no region is specified
 
 ### [v0.1.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.1.0) - 2020-05-23
 
