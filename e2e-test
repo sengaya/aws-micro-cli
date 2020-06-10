@@ -43,6 +43,7 @@ rm -f /tmp/.aws-micro
 # s3 ls
 "${e2e_path}/aws-micro" --endpoint-url http://127.0.0.1:19999 s3 ls | grep test-bucket > /dev/null || fail_and_exit
 "${e2e_path}/aws-micro" s3 --endpoint-url http://127.0.0.1:19999 ls s3://test-bucket/ | grep aws-micro > /dev/null || fail_and_exit
+"${e2e_path}/aws-micro" s3 --endpoint-url http://127.0.0.1:19999 ls test-bucket/ | grep aws-micro > /dev/null || fail_and_exit
 
 # cleanup
 pkill -f "minio --quiet server --address :19999 ${storage_path}"

@@ -6,22 +6,23 @@ s3_ls() {
   [[ "${_positionals[2]:-}" = "help" ]] && print_help_s3 && exit 0
   s3url="${_positionals[2]:-}" # s3url is optional
 
-  if is_s3url "${s3url}"; then
-    bucket="$(get_bucket_from_s3url "${s3url}")"
-    key="$(get_key_from_s3url "${s3url}")"
-    if [[ "${dryrun}" = "echo" ]]; then
-        formatter="cat"
-    else
-        formatter="xml_to_text_for_keys"
-    fi
-  else
+  if [[ "${s3url}" = "" ]]; then
     bucket=""
     key=""
-    if [[ "${dryrun}" = "echo" ]]; then
-        formatter="cat"
+    formatter="xml_to_text_for_buckets"
+  else
+    if is_s3url "${s3url}"; then
+      bucket="$(get_bucket_from_s3url "${s3url}")"
+      key="$(get_key_from_s3url "${s3url}")"
     else
-        formatter="xml_to_text_for_buckets"
+      bucket="$(get_bucket_from_s3url "s3://${s3url}")"
+      key="$(get_key_from_s3url "s3://${s3url}")"
     fi
+    formatter="xml_to_text_for_keys"
+  fi
+
+  if [[ "${dryrun}" = "echo" ]]; then
+    formatter="cat"
   fi
 
   http_method="GET"
