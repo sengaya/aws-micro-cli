@@ -36,6 +36,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Install dependencies and BATS
-        run: "apt-get update && apt-get install -y openssl curl bats"
+        run: "apt-get update && apt-get install -y openssl curl bats file"
       - name: Run BATS tests
         run: bats tests/
