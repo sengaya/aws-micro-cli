@@ -31,7 +31,7 @@ jobs:
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        container: ["ubuntu:20.04", "ubuntu:16.04", "ubuntu:18.04", "debian:10", "debian:9", "debian:8"]
+        container: ["ubuntu:20.04", "ubuntu:18.04", "ubuntu:16.04", "debian:10", "debian:9"]
     steps:
       - name: Check out code
         uses: actions/checkout@v2
