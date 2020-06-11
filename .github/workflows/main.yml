@@ -31,7 +31,7 @@ jobs:
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        container: ["ubuntu:20.04", "ubuntu:18.04", "ubuntu:16.04", "debian:10", "debian:9"]
+        container: ["ubuntu:20.04", "ubuntu:18.04", "ubuntu:16.04", "debian:10-slim", "debian:9-slim"]
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -62,6 +62,6 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Install BATS
-        run: "curl -L http://download.opensuse.org/repositories/devel:/tools/openSUSE_Factory_ARM/noarch/bats-1.2.0-19.d_t.2.noarch.rpm -o /tmp/bats.rpm && rpm -i /tmp/bats.rpm"
+        run: "yum install -y openssl file && curl -L http://download.opensuse.org/repositories/devel:/tools/openSUSE_Factory_ARM/noarch/bats-1.2.0-19.d_t.2.noarch.rpm -o /tmp/bats.rpm && rpm -i /tmp/bats.rpm"
       - name: Run BATS tests
         run: bats tests/
