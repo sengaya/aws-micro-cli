@@ -146,11 +146,17 @@ host;x-amz-content-sha256;x-amz-date"
       content_type_line="content-type:${content_type}"$'\n'
       content_type_header="content-type;"
     fi
+    if [[ "${content_sha256}" = "" ]]; then
+      content_sha256_line=""
+      content_sha256_header=""
+    else
+      content_sha256_line="x-amz-content-sha256:${content_sha256}"$'\n'
+      content_sha256_header="x-amz-content-sha256;"
+    fi
     canonical_headers="${content_md5_line}${content_type_line}host:${host}
-x-amz-content-sha256:${content_sha256}
-x-amz-date:${date}
+${content_sha256_line}x-amz-date:${date}
 
-${content_md5_header}${content_type_header}host;x-amz-content-sha256;x-amz-date"
+${content_md5_header}${content_type_header}host;${content_sha256_header}x-amz-date"
   fi
   output_handler "${FUNCNAME[0]}" "${canonical_headers}"
 }
@@ -208,18 +214,19 @@ SignedHeaders=${signed_headers}, Signature=${signature}"
 }
 
 create_request_url() {
-  declare -r custom_endpoint="${1}"
-  declare -r region="${2}"
-  declare -r bucket="${3}"
-  declare -r key="${4}"
+  declare -r service="${1}"
+  declare -r custom_endpoint="${2}"
+  declare -r region="${3}"
+  declare -r bucket="${4:-}"
+  declare -r key="${5:-}"
 
   if [[ -z "${custom_endpoint}" ]];then
     if [[ -z "${bucket}" && -z "${key}" ]]; then
-      url="https://s3.${region}.amazonaws.com/"
+      url="https://${service}.${region}.amazonaws.com/"
     elif [[ -z "${key}" ]]; then
-      url="https://${bucket}.s3.${region}.amazonaws.com/"
+      url="https://${bucket}.${service}.${region}.amazonaws.com/"
     else
-      url="https://${bucket}.s3.${region}.amazonaws.com/${key}"
+      url="https://${bucket}.${service}.${region}.amazonaws.com/${key}"
     fi
   else
     [[ "${custom_endpoint}" == */ ]] && endpoint="$custom_endpoint" || endpoint="$custom_endpoint/"

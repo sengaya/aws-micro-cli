@@ -57,6 +57,8 @@ AVAILABLE SERVICES
        o s3
 
        o s3api
+
+       o sts
 "
 }
 
@@ -76,6 +78,8 @@ _arg_content_type=
 _arg_endpoint_url=
 _arg_no_guess_mime_type="off"
 _arg_no_sign_request="off"
+_arg_role_arn=
+_arg_role_session_name=
 region=
 DEBUG=0
 curl_output="-s -S"
@@ -118,6 +122,16 @@ parse_commandline() {
       --region)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
         region="$2"
+        shift
+        ;;
+      --role-arn)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_role_arn="$2"
+        shift
+        ;;
+      --role-session-name)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_role_session_name="$2"
         shift
         ;;
       --version)

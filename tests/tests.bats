@@ -287,55 +287,55 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
 }
 
 @test "create_request_url should return a valid endpoint (us-east-1)" {
-  run create_request_url "" "us-east-1" "bucket" "key"
+  run create_request_url "s3" "" "us-east-1" "bucket" "key"
   [ "$status" -eq 0 ]
   [ "$output" = "https://bucket.s3.us-east-1.amazonaws.com/key" ]
 }
 
 @test "create_request_url should return a valid endpoint (us-east-1, only bucket)" {
-  run create_request_url "" "us-east-1" "bucket" ""
+  run create_request_url "s3" "" "us-east-1" "bucket" ""
   [ "$status" -eq 0 ]
   [ "$output" = "https://bucket.s3.us-east-1.amazonaws.com/" ]
 }
 
 @test "create_request_url should return a valid endpoint (other region)" {
-  run create_request_url "" "eu-central-1" "bucket" "key"
+  run create_request_url "s3" "" "eu-central-1" "bucket" "key"
   [ "$status" -eq 0 ]
   [ "$output" = "https://bucket.s3.eu-central-1.amazonaws.com/key" ]
 }
 
 @test "create_request_url should return a valid endpoint (no region, only bucket)" {
-  run create_request_url "" "" "bucket" ""
+  run create_request_url "s3" "" "" "bucket" ""
   [ "$status" -eq 0 ]
   [ "$output" = "https://bucket.s3.amazonaws.com/" ]
 }
 
 @test "create_request_url should return a valid endpoint (custom endpoint)" {
-  run create_request_url "https://custom.endpoint" "eu-central-1" "bucket" "key"
+  run create_request_url "s3" "https://custom.endpoint" "eu-central-1" "bucket" "key"
   [ "$status" -eq 0 ]
   [ "$output" = "https://custom.endpoint/bucket/key" ]
 }
 
 @test "create_request_url should return a valid endpoint (custom endpoint, only bucket)" {
-  run create_request_url "https://custom.endpoint/" "foo" "bucket" ""
+  run create_request_url "s3" "https://custom.endpoint/" "foo" "bucket" ""
   [ "$status" -eq 0 ]
   [ "$output" = "https://custom.endpoint/bucket" ]
 }
 
 @test "create_request_url should return a valid endpoint (custom endpoint, no bucket/key)" {
-  run create_request_url "https://custom.endpoint/" "foo" "" ""
+  run create_request_url "s3" "https://custom.endpoint/" "foo" "" ""
   [ "$status" -eq 0 ]
   [ "$output" = "https://custom.endpoint/" ]
 }
 
 @test "create_request_url should return a valid endpoint (custom endpoint, no bucket/key, slash added)" {
-  run create_request_url "https://custom.endpoint" "foo" "" ""
+  run create_request_url "s3" "https://custom.endpoint" "foo" "" ""
   [ "$status" -eq 0 ]
   [ "$output" = "https://custom.endpoint/" ]
 }
 
 @test "create_request_url should return a valid endpoint if no bucket is supplied (other region)" {
-  run create_request_url "" "eu-central-1" "" ""
+  run create_request_url "s3" "" "eu-central-1" "" ""
   [ "$status" -eq 0 ]
   [ "$output" = "https://s3.eu-central-1.amazonaws.com/" ]
 }

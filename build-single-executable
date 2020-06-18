@@ -8,7 +8,8 @@ head -4 aws-micro > "${filename}"
 { cat args.sh;
   cat s3.sh;
   cat s3api.sh;
+  cat sts.sh;
   cat utils.sh;
-  tail -n +9 aws-micro;
+  tail -n +10 aws-micro;
 } >> "${filename}"
 chmod 755 "${filename}"

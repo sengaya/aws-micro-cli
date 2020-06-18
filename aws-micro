@@ -6,6 +6,7 @@ set -o errexit -o pipefail -o noclobber -o nounset
 . args.sh
 . s3.sh
 . s3api.sh
+. sts.sh
 
 get_args "$@"
 
@@ -15,6 +16,9 @@ case "${_arg_command}" in
     ;;
   s3api)
     s3api
+    ;;
+  sts)
+    sts
     ;;
   help)
     print_long_help

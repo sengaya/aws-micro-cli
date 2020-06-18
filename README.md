@@ -99,6 +99,17 @@ Options:
 
     --bucket <value>
 
+### sts
+
+    assume-role
+
+Options:
+
+    --role-arn <value>
+    --role-session-name <value>
+
+The output is in XML while `aws` will transform the output to JSON.
+
 ## Changelog
 
 All notable changes to this project will be documented here.
@@ -115,6 +126,7 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 - Option `--no-guess-mime-type` for `s3 cp` implemented.
 - Option `--no-sign-request` implemented.
 - Command `s3api create-bucket` implemented.
+- Command `sts assume-role` implemented.
 
 #### Changed
 
