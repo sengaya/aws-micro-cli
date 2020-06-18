@@ -432,3 +432,17 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
   run ./aws-micro s3api create-bucket
   [ "$status" -eq 1 ]
 }
+
+@test "create_curl_headers should return valid curl headers" {
+  output="$(echo 'content-md5:EouJif1yvVNEpeJ2AvoIRA==
+content-type:text/css
+host:127.0.0.1:5000
+x-amz-content-sha256:ac7d06088cf6d9d0a5f5ea8c126caadc786b49ea2f707bae3cb537724c1631c8
+x-amz-date:20200617T212750Z
+
+content-md5;content-type;host;x-amz-content-sha256;x-amz-date' | create_curl_headers)"
+  [ "$output" = "-H content-md5:EouJif1yvVNEpeJ2AvoIRA==
+-H content-type:text/css
+-H x-amz-content-sha256:ac7d06088cf6d9d0a5f5ea8c126caadc786b49ea2f707bae3cb537724c1631c8
+-H x-amz-date:20200617T212750Z" ]
+}

@@ -281,3 +281,12 @@ ${
   p
 }' | uniq # Thanks to https://unix.stackexchange.com/a/587570/25979
 }
+
+create_curl_headers() {
+  # 1) delete the last 2 lines
+  # 2) remove host, not needed
+  # 3) Add -H flag
+  sed -e :a -e '$d;N;2,2ba' -e 'P;D' \
+  | grep -v host \
+  | sed -e 's/.*/-H &/'
+}
