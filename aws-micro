@@ -10,6 +10,10 @@ set -o errexit -o pipefail -o noclobber -o nounset
 
 get_args "$@"
 
+if [[ -n "${_arg_profile}" ]]; then
+  assume_role
+fi
+
 case "${_arg_command}" in
   s3)
     s3

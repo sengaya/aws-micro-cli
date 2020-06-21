@@ -121,43 +121,42 @@ create_canonical_and_signed_headers() {
   declare -r date="${4}"
   declare -r content_md5="${5}"
   declare -r content_type="${6}"
+  declare -r security_token="${7:-}"
 
   host="$(get_host_from_request_url "$request_url")"
 
-  if [[ "${http_method}" == "GET" ]]; then
-    canonical_headers="host:${host}
-x-amz-content-sha256:${content_sha256}
-x-amz-date:${date}
-
-host;x-amz-content-sha256;x-amz-date"
-
+  if [[ "${content_md5}" = "" ]]; then
+    content_md5_line=""
+    content_md5_header=""
   else
-    if [[ "${content_md5}" = "" ]]; then
-      content_md5_line=""
-      content_md5_header=""
-    else
-      content_md5_line="content-md5:${content_md5}"$'\n'
-      content_md5_header="content-md5;"
-    fi
-    if [[ "${content_type}" = "" ]]; then
-      content_type_line=""
-      content_type_header=""
-    else
-      content_type_line="content-type:${content_type}"$'\n'
-      content_type_header="content-type;"
-    fi
-    if [[ "${content_sha256}" = "" ]]; then
-      content_sha256_line=""
-      content_sha256_header=""
-    else
-      content_sha256_line="x-amz-content-sha256:${content_sha256}"$'\n'
-      content_sha256_header="x-amz-content-sha256;"
-    fi
-    canonical_headers="${content_md5_line}${content_type_line}host:${host}
-${content_sha256_line}x-amz-date:${date}
-
-${content_md5_header}${content_type_header}host;${content_sha256_header}x-amz-date"
+    content_md5_line="content-md5:${content_md5}"$'\n'
+    content_md5_header="content-md5;"
   fi
+  if [[ "${content_type}" = "" ]]; then
+    content_type_line=""
+    content_type_header=""
+  else
+    content_type_line="content-type:${content_type}"$'\n'
+    content_type_header="content-type;"
+  fi
+  if [[ "${content_sha256}" = "" ]]; then
+    content_sha256_line=""
+    content_sha256_header=""
+  else
+    content_sha256_line="x-amz-content-sha256:${content_sha256}"$'\n'
+    content_sha256_header="x-amz-content-sha256;"
+  fi
+  if [[ "${security_token}" = "" ]]; then
+    security_token_line=""
+    security_token_header=""
+  else
+    security_token_line=$'\n'"x-amz-security-token:${security_token}"
+    security_token_header=";x-amz-security-token"
+  fi
+  canonical_headers="${content_md5_line}${content_type_line}host:${host}
+${content_sha256_line}x-amz-date:${date}${security_token_line}
+
+${content_md5_header}${content_type_header}host;${content_sha256_header}x-amz-date${security_token_header}"
   output_handler "${FUNCNAME[0]}" "${canonical_headers}"
 }
 
@@ -296,4 +295,49 @@ create_curl_headers() {
   sed -e :a -e '$d;N;2,2ba' -e 'P;D' \
   | grep -v host \
   | sed -e 's/.*/-H &/'
+}
+
+get_key_from_ini_file() {
+  declare -r file="${1}"
+  declare -r section="${2}"
+  declare -r key="${3}"
+
+  value="$(sed -n '/^[ \t]*\['"${section}"'\]/,/\[/s/^[ \t]*'"${key}"'[ \t]*=[ \t]*//p' "${file}")"
+  output_handler "${FUNCNAME[0]}" "${value}"
+}
+
+get_access_key_id() {
+  declare -r xml="${1}"
+
+  tmp="${xml##*<AccessKeyId>}"
+  output_handler "${FUNCNAME[0]}" "${tmp%%</AccessKeyId>*}"
+}
+
+get_secret_access_key() {
+  declare -r xml="${1}"
+
+  tmp="${xml##*<SecretAccessKey>}"
+  output_handler "${FUNCNAME[0]}" "${tmp%%</SecretAccessKey>*}"
+}
+
+get_session_token() {
+  declare -r xml="${1}"
+
+  tmp="${xml##*<SessionToken>}"
+  output_handler "${FUNCNAME[0]}" "${tmp%%</SessionToken>*}"
+}
+
+assume_role() {
+  credential_source="$(get_key_from_ini_file "${AWS_CONFIG_FILE}" "profile ${_arg_profile}" credential_source)"
+  if [[ "${credential_source}" = "Environment" ]]; then
+    _arg_role_session_name="aws-micro-session-$RANDOM"
+    _arg_role_arn="$(get_key_from_ini_file "${AWS_CONFIG_FILE}" "profile ${_arg_profile}" role_arn)"
+    assume_role_response="$(service="sts" sts_assume-role)"
+
+    AWS_ACCESS_KEY_ID="$(get_access_key_id "${assume_role_response}")"
+    AWS_SECRET_ACCESS_KEY="$(get_secret_access_key "${assume_role_response}")"
+    security_token="$(get_session_token "${assume_role_response}")"
+  else
+    _PRINT_HELP=yes die "Only 'credential_source = Environment' supported."
+  fi
 }

@@ -36,7 +36,7 @@ s3_ls() {
     ${dryrun} curl ${curl_output} --fail \
       "${request_url}?list-type=2&prefix=&delimiter=%2F&encoding-type=url" | "${formatter}"
   else
-    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "" "")"
+    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "" "" "${security_token:-}")"
     canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
     header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
     curl_headers="$(echo "${canonical_and_signed_headers}" | create_curl_headers)"

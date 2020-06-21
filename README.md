@@ -34,9 +34,10 @@ If you clone the repo, be aware that `aws-micro` sources additional files and ca
 
 ## Compatibility
 
-Supported services: `s3`, `s3api`
+Supported services: `s3`, `s3api`, `sts`
 
-Configuration settings and credentials set in `~/.aws` are ignored.
+Configuration settings and credentials set in `~/.aws` are ignored, with the exception of profiles (see below).
+The path to the configuration file can be set with `AWS_CONFIG_FILE`. It defaults to `$HOME/.aws/config`.
 Credentials must be configured via the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
 The region can be set either via command line option or `AWS_DEFAULT_REGION`.
 The output of `aws-micro` will in many cases differ from `aws`.
@@ -52,9 +53,12 @@ Global options:
        --debug (boolean)
 
        --dryrun (boolean)
-       (Contrary to aws-cli this will work on all commands)
+       (Contrary to `aws` this will work on all commands)
 
        --endpoint-url (string)
+
+       --profile (string)
+       (only `role_arn` in combination with `credential_source=Environment` is currently supported, no caching of temporary credentials)
 
        --region (string)
 
@@ -123,10 +127,12 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 
 #### Added
 
-- Option `--no-guess-mime-type` for `s3 cp` implemented.
-- Option `--no-sign-request` implemented.
 - Command `s3api create-bucket` implemented.
 - Command `sts assume-role` implemented.
+- Option `--no-guess-mime-type` for `s3 cp` implemented.
+- Option `--no-sign-request` implemented.
+- Option `--profile` implemented.
+- Environment variable `AWS_CONFIG_FILE` supported.
 
 #### Changed
 

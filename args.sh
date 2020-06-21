@@ -40,6 +40,10 @@ OPTIONS
 
        Override command's default URL with the given URL.
 
+       --profile (string)
+
+       Use a specific profile from your credential file.
+
        --region (string)
 
        The region to use. Overrides config/env settings.
@@ -78,6 +82,7 @@ _arg_content_type=
 _arg_endpoint_url=
 _arg_no_guess_mime_type="off"
 _arg_no_sign_request="off"
+_arg_profile=
 _arg_role_arn=
 _arg_role_session_name=
 region=
@@ -117,6 +122,11 @@ parse_commandline() {
       --endpoint-url)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
         _arg_endpoint_url="$2"
+        shift
+        ;;
+      --profile)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_profile="$2"
         shift
         ;;
       --region)
@@ -171,5 +181,8 @@ get_args() {
   service="${_arg_command:-}"
   if [[ -z "${region}" ]]; then
     region="${AWS_DEFAULT_REGION:-}"
+  fi
+  if [[ -z "${AWS_CONFIG_FILE:-}" ]]; then
+    AWS_CONFIG_FILE="$HOME/.aws/config"
   fi
 }
