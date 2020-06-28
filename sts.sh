@@ -17,7 +17,8 @@ sts_assume-role() {
   if [[ "${_arg_no_sign_request}" = "on" ]]; then
       ${dryrun} curl ${curl_output} --fail "${request_url}" --data "${body}"
   else
-    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "" "${date}" "" "application/x-www-form-urlencoded;charset=utf-8")"
+    headers=("host:$(get_host_from_request_url "$request_url")" "x-amz-date:${date}" "content-type:application/x-www-form-urlencoded;charset=utf-8" "${security_token_header:-}")
+    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
     canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
     header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
     curl_headers="$(echo "${canonical_and_signed_headers}" | create_curl_headers)"

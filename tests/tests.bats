@@ -131,8 +131,9 @@
   [ "$output" = "/bucket" ]
 }
 
-@test "create_canonical_and_signed_headers with custom endpoint should return a valid response" {
-  run create_canonical_and_signed_headers "PUT" "http://127.0.0.1:9000/bucket/key" "1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f" "20200525T185439Z" "OnjOwdnDQYeocbNO+GjERg==" "text/plain"
+@test "create_canonical_and_signed_headers should return a valid response" {
+  headers=("host:$(get_host_from_request_url "http://127.0.0.1:9000/bucket/key")" "x-amz-content-sha256:1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f" "x-amz-date:20200525T185439Z" "content-md5:OnjOwdnDQYeocbNO+GjERg==" "content-type:text/plain" "")
+  run create_canonical_and_signed_headers "${headers[@]}"
   [ "$status" -eq 0 ]
   [ "$output" = "content-md5:OnjOwdnDQYeocbNO+GjERg==
 content-type:text/plain
@@ -144,7 +145,8 @@ content-md5;content-type;host;x-amz-content-sha256;x-amz-date" ]
 }
 
 @test "create_canonical_request with custom endpoint should return a valid request" {
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "PUT" "http://127.0.0.1:9000/bucket/key" "1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f" "20200525T185439Z" "OnjOwdnDQYeocbNO+GjERg==" "text/plain")"
+  headers=("host:$(get_host_from_request_url "http://127.0.0.1:9000/bucket/key")" "x-amz-content-sha256:1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f" "x-amz-date:20200525T185439Z" "content-md5:OnjOwdnDQYeocbNO+GjERg==" "content-type:text/plain")
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
   run create_canonical_request "PUT" "http://127.0.0.1:9000/bucket/key" "${canonical_and_signed_headers}" "1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f"
   [ "$status" -eq 0 ]
   [ "$output" = "PUT
@@ -161,7 +163,8 @@ content-md5;content-type;host;x-amz-content-sha256;x-amz-date
 }
 
 @test "create_canonical_request to AWS should return a valid request" {
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "PUT" "https://bucket.s3.amazonaws.com/key" "UNSIGNED-PAYLOAD" "20200508T121510Z" "07BzhNET7exJ6qYjitX/AA==" "text/plain")"
+  headers=("host:$(get_host_from_request_url "https://bucket.s3.amazonaws.com/key")" "x-amz-content-sha256:UNSIGNED-PAYLOAD" "x-amz-date:20200508T121510Z" "content-md5:07BzhNET7exJ6qYjitX/AA==" "content-type:text/plain")
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
   run create_canonical_request "PUT" "https://bucket.s3.amazonaws.com/key" "${canonical_and_signed_headers}" "UNSIGNED-PAYLOAD"
   [ "$status" -eq 0 ]
   [ "$output" = "PUT
@@ -178,7 +181,8 @@ UNSIGNED-PAYLOAD" ]
 }
 
 @test "create_canonical_request to AWS for copy from s3 should return a valid request" {
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "GET" "https://bucket.s3.amazonaws.com/key" "${empty_string_sha256}" "20200508T121510Z" "" "")"
+  headers=("host:$(get_host_from_request_url "https://bucket.s3.amazonaws.com/key")" "x-amz-content-sha256:${empty_string_sha256}" "x-amz-date:20200508T121510Z")
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
   run create_canonical_request "GET" "https://bucket.s3.amazonaws.com/key" "${canonical_and_signed_headers}" "${empty_string_sha256}"
   [ "$status" -eq 0 ]
   [ "$output" = "GET
@@ -193,7 +197,8 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ]
 }
 
 @test "create_canonical_request to AWS with custom content type should return a valid request" {
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "PUT" "https://bucket.s3.amazonaws.com/key" "UNSIGNED-PAYLOAD" "20200508T121510Z" "07BzhNET7exJ6qYjitX/AA==" "foo/bar")"
+  headers=("host:$(get_host_from_request_url "https://bucket.s3.amazonaws.com/key")" "x-amz-content-sha256:UNSIGNED-PAYLOAD" "x-amz-date:20200508T121510Z" "content-md5:07BzhNET7exJ6qYjitX/AA==" "content-type:foo/bar")
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
   run create_canonical_request "PUT" "https://bucket.s3.amazonaws.com/key" "${canonical_and_signed_headers}" "UNSIGNED-PAYLOAD"
   [ "$status" -eq 0 ]
   [ "$output" = "PUT
@@ -210,7 +215,8 @@ UNSIGNED-PAYLOAD" ]
 }
 
 @test "create_canonical_request to AWS for listing s3 content (no source) should return a valid request" {
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "GET" "https://bucket.s3.amazonaws.com/" "${empty_string_sha256}" "20200508T121510Z" "" "")"
+  headers=("host:$(get_host_from_request_url "https://bucket.s3.amazonaws.com/")" "x-amz-content-sha256:${empty_string_sha256}" "x-amz-date:20200508T121510Z")
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
   run create_canonical_request "GET" "https://bucket.s3.amazonaws.com/" "${canonical_and_signed_headers}" "${empty_string_sha256}"
   [ "$status" -eq 0 ]
   [ "$output" = "GET
@@ -225,7 +231,8 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" ]
 }
 
 @test "create_canonical_request to AWS without content type should return a valid request" {
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "PUT" "https://bucket.s3.amazonaws.com/key" "UNSIGNED-PAYLOAD" "20200508T121510Z" "07BzhNET7exJ6qYjitX/AA==" "")"
+  headers=("host:$(get_host_from_request_url "https://bucket.s3.amazonaws.com/key")" "x-amz-content-sha256:UNSIGNED-PAYLOAD" "x-amz-date:20200508T121510Z" "content-md5:07BzhNET7exJ6qYjitX/AA==")
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
   run create_canonical_request "PUT" "https://bucket.s3.amazonaws.com/key" "${canonical_and_signed_headers}" "UNSIGNED-PAYLOAD"
   [ "$status" -eq 0 ]
   [ "$output" = "PUT
@@ -241,7 +248,8 @@ UNSIGNED-PAYLOAD" ]
 }
 
 @test "create_string_to_sign should return a valid string for signing" {
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "PUT" "http://127.0.0.1:9000/bucket/key" "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" "20200507T171310Z" "1B2M2Y8AsgTpgAmY7PhCfg==" "inode/chardevice")"
+  headers=("host:$(get_host_from_request_url "http://127.0.0.1:9000/bucket/key")" "x-amz-content-sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" "x-amz-date:20200507T171310Z" "content-md5:1B2M2Y8AsgTpgAmY7PhCfg==" "content-type:inode/chardevice")
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
   req="$(create_canonical_request "PUT" "http://127.0.0.1:9000/bucket/key" "${canonical_and_signed_headers}" "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")"
   run create_string_to_sign "20200507T171310Z" "20200507/eu-west-3/s3/aws4_request" "$req"
   [ "$status" -eq 0 ]
@@ -253,7 +261,8 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
 
 @test "create_signature should return a valid signature" {
   AWS_SECRET_ACCESS_KEY="key"
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "PUT" "http://127.0.0.1:9000/bucket/key" "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c" "20200507T231134Z" "07BzhNET7exJ6qYjitX/AA==" "text/plain")"
+  headers=("host:$(get_host_from_request_url "http://127.0.0.1:9000/bucket/key")" "x-amz-content-sha256:b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c" "x-amz-date:20200507T231134Z" "content-md5:07BzhNET7exJ6qYjitX/AA==" "content-type:text/plain")
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
   req="$(create_canonical_request "PUT" "http://127.0.0.1:9000/bucket/key" "${canonical_and_signed_headers}" "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c")"
   string_to_sign="$(create_string_to_sign "20200507T231134Z" "20200507/eu-west-3/s3/aws4_request" "$req")"
   run create_signature "$string_to_sign" "20200507" "eu-west-3" "s3"
@@ -264,7 +273,8 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
 @test "create_authorization_header should return a valid authorization header (PUT)" {
   AWS_ACCESS_KEY_ID="id"
   AWS_SECRET_ACCESS_KEY="key"
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "PUT" "http://127.0.0.1:9000/bucket/key" "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c" "20200507T231134Z" "07BzhNET7exJ6qYjitX/AA==" "text/plain")"
+  headers=("host:$(get_host_from_request_url "http://127.0.0.1:9000/bucket/key")" "x-amz-content-sha256:b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c" "x-amz-date:20200507T231134Z" "content-md5:07BzhNET7exJ6qYjitX/AA==" "content-type:text/plain")
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
   req="$(create_canonical_request "PUT" "http://127.0.0.1:9000/bucket/key" "${canonical_and_signed_headers}" "b5bb9d8014a0f9b1d61e21e796d78dccdf1352f23cd32812f4850b878ae4944c")"
   string_to_sign="$(create_string_to_sign "20200507T231134Z" "20200507/eu-west-3/s3/aws4_request" "$req")"
   signature="$(create_signature "$string_to_sign" "20200507" "eu-west-3" "s3")"
@@ -276,7 +286,8 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
 @test "create_authorization_header should return a valid authorization header (GET)" {
   AWS_ACCESS_KEY_ID="access-key-id"
   AWS_SECRET_ACCESS_KEY="secret-access-key"
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "GET" "http://127.0.0.1:9000/bucket/key" "${empty_string_sha256}" "20200527T134708Z" "" "")"
+  headers=("host:$(get_host_from_request_url "http://127.0.0.1:9000/bucket/key")" "x-amz-content-sha256:${empty_string_sha256}" "x-amz-date:20200527T134708Z")
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
   req="$(create_canonical_request "GET" "http://127.0.0.1:9000/bucket/key" "${canonical_and_signed_headers}" "${empty_string_sha256}")"
   header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
   string_to_sign="$(create_string_to_sign "20200527T134708Z" "20200527/eu-west-3/s3/aws4_request" "$req")"
@@ -409,7 +420,7 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
   run get_mime ".test.txt" "" ""
   rm .test.txt
   [ "$status" -eq 0 ]
-  [ "$output" = "text/plain" ]
+  [ "$output" = "content-type:text/plain" ]
 }
 
 @test "get_mime should return empty string when no_guess_mime_type_flag is set" {
@@ -425,7 +436,7 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
   run get_mime ".test.txt" "text/css" "off"
   rm .test.txt
   [ "$status" -eq 0 ]
-  [ "$output" = "text/css" ]
+  [ "$output" = "content-type:text/css" ]
 }
 
 @test "s3api_create-bucket should fail if --bucket is not set" {

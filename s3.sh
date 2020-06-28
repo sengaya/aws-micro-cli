@@ -36,7 +36,8 @@ s3_ls() {
     ${dryrun} curl ${curl_output} --fail \
       "${request_url}?list-type=2&prefix=&delimiter=%2F&encoding-type=url" | "${formatter}"
   else
-    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "" "" "${security_token:-}")"
+    headers=("host:$(get_host_from_request_url "$request_url")" "x-amz-content-sha256:${content_sha256}" "x-amz-date:${date}" "${security_token_header:-}")
+    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
     canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
     header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
     curl_headers="$(echo "${canonical_and_signed_headers}" | create_curl_headers)"
@@ -85,7 +86,7 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
     http_method="PUT"
     bucket="$(get_bucket_from_s3url "${destination}")"
     key="$(get_key_from_s3url "${destination}")"
-    content_md5="$(md5_base64 "${source}")"
+    content_md5="content-md5:$(md5_base64 "${source}")"
     content_type="$(get_mime "${source}" "${_arg_content_type}" "${_arg_no_guess_mime_type}")"
     if [[ -z "$key" ]]; then
       key="${source##*/}"
@@ -97,7 +98,6 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
     else
       content_sha256="$(sha256 "${source}")"
     fi
-
   fi
 
   if [[ "${_arg_no_sign_request}" = "on" ]]; then
@@ -112,7 +112,8 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
     date="$(date -u +%Y%m%dT%H%M%SZ)"
     short_date="${date%%T*}"
 
-    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "${content_md5}" "${content_type}")"
+    headers=("host:$(get_host_from_request_url "$request_url")" "x-amz-content-sha256:${content_sha256}" "x-amz-date:${date}" "${content_md5}" "${content_type}" "${security_token_header:-}" "${sse_header:-}" "${storage_class_header:-}" "${acl_header:-}")
+    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
     canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
     header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
     curl_headers="$(echo "${canonical_and_signed_headers}" | create_curl_headers)"

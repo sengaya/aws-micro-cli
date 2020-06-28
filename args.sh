@@ -77,6 +77,7 @@ To see help text, you can run:
 }
 
 _positionals=()
+_arg_acl=
 _arg_bucket=
 _arg_content_type=
 _arg_endpoint_url=
@@ -85,6 +86,8 @@ _arg_no_sign_request="off"
 _arg_profile=
 _arg_role_arn=
 _arg_role_session_name=
+_arg_sse=
+_arg_storage_class=
 region=
 DEBUG=0
 curl_output="-s -S"
@@ -108,6 +111,23 @@ parse_commandline() {
         ;;
       --no-sign-request)
         _arg_no_sign_request="on"
+        ;;
+      --acl)
+        if [[ $# -lt 2 ]] || [[ "${2:---}" == --* ]]; then
+           _PRINT_HELP=yes die "$0: error: argument --acl: expected one argument" 1
+        fi
+        _arg_acl="$2"
+        shift
+        valid_acls=("private" "public-read" "public-read-write" "authenti-cated-read" "aws-exec-read" "bucket-owner-read" "bucket-owner-full-control" "log-delivery-write")
+        if ! array_contains "${_arg_acl}" "${valid_acls[@]}"; then
+          _PRINT_HELP=yes die "$0: error: argument --acl: Invalid choice, valid choices are:
+
+private                                  | public-read
+public-read-write                        | authenticated-read
+aws-exec-read                            | bucket-owner-read
+bucket-owner-full-control                | log-delivery-write" 1
+        fi
+        acl_header="x-amz-acl:${_arg_acl}"
         ;;
       --content-type)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
@@ -143,6 +163,39 @@ parse_commandline() {
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
         _arg_role_session_name="$2"
         shift
+        ;;
+      --sse)
+        if [[ $# -lt 2 ]] || [[ "${2:---}" == --* ]]; then
+          _arg_sse="AES256"
+        elif [[ "$2" = "AES256" ]] || [[ "$2" = "aws:kms" ]]; then
+          _arg_sse="$2"
+          shift
+        else
+          _PRINT_HELP=yes die "$0: error: argument $_key: Invalid choice, valid choices are:
+
+AES256                                   | aws:kms" 1
+        fi
+        sse_header="x-amz-server-side-encryption:${_arg_sse}"
+        ;;
+      --storage-class)
+        if [[ $# -lt 2 ]] || [[ "${2:---}" == --* ]]; then
+           _PRINT_HELP=yes die "$0: error: argument --storage-class: expected one argument" 1
+        fi
+        _arg_storage_class="$2"
+        shift
+        valid_storage_classes=("STANDARD" "REDUCED_REDUNDANCY" "STANDARD_IA" "ONEZONE_IA" "INTELLIGENT_TIERING" "GLACIER" "DEEP_ARCHIVE")
+        if ! array_contains "${_arg_storage_class}" "${valid_storage_classes[@]}"; then
+          _PRINT_HELP=yes die "$0: error: argument --storage-class: Invalid choice, valid choices are:
+
+STANDARD                                 | REDUCED_REDUNDANCY
+STANDARD_IA                              | ONEZONE_IA
+INTELLIGENT_TIERING                      | GLACIER
+DEEP_ARCHIVE
+
+
+Invalid choice: '${_arg_storage_class}'" 1
+        fi
+        storage_class_header="x-amz-storage-class:${_arg_storage_class}"
         ;;
       --version)
         echo "$0 v0.1.0"

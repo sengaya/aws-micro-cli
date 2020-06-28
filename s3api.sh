@@ -19,7 +19,8 @@ s3api_create-bucket() {
   if [[ "${_arg_no_sign_request}" = "on" ]]; then
       ${dryrun} curl ${curl_output} --fail -X "${http_method}" "${request_url}" -H "Content-Length: 0" -o /dev/null
   else
-    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${http_method}" "${request_url}" "${content_sha256}" "${date}" "" "")"
+    headers=("host:$(get_host_from_request_url "$request_url")" "x-amz-content-sha256:${content_sha256}" "x-amz-date:${date}" "${security_token_header:-}")
+    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
     canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
     header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
     curl_headers="$(echo "${canonical_and_signed_headers}" | create_curl_headers)"

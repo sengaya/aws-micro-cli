@@ -21,9 +21,9 @@ get_mime() {
   if [[ "${no_guess_mime_type_flag}" = "on" ]]; then
     mime=""
   elif [[ -n "${custom_content_type}" ]]; then
-    mime="${custom_content_type}"
+    mime="content-type:${custom_content_type}"
   elif hash file 2>/dev/null; then
-    mime="$(file -b --mime-type "${file}")"
+    mime="content-type:$(file -b --mime-type "${file}")"
   else
     >&2 echo "WARN - command 'file' not found, no content type set"
     mime=""
@@ -115,48 +115,22 @@ get_canonical_uri() {
 }
 
 create_canonical_and_signed_headers() {
-  declare -r http_method="${1}"
-  declare -r request_url="${2}"
-  declare -r content_sha256="${3}"
-  declare -r date="${4}"
-  declare -r content_md5="${5}"
-  declare -r content_type="${6}"
-  declare -r security_token="${7:-}"
+  declare -r headers=("$@")
 
-  host="$(get_host_from_request_url "$request_url")"
+  headers_list=()
+  for header in "${headers[@]}"; do
+    IFS=$':' read -r header_name _ <<< "$header"
+    headers_list+=("${header_name}")
+  done
 
-  if [[ "${content_md5}" = "" ]]; then
-    content_md5_line=""
-    content_md5_header=""
-  else
-    content_md5_line="content-md5:${content_md5}"$'\n'
-    content_md5_header="content-md5;"
-  fi
-  if [[ "${content_type}" = "" ]]; then
-    content_type_line=""
-    content_type_header=""
-  else
-    content_type_line="content-type:${content_type}"$'\n'
-    content_type_header="content-type;"
-  fi
-  if [[ "${content_sha256}" = "" ]]; then
-    content_sha256_line=""
-    content_sha256_header=""
-  else
-    content_sha256_line="x-amz-content-sha256:${content_sha256}"$'\n'
-    content_sha256_header="x-amz-content-sha256;"
-  fi
-  if [[ "${security_token}" = "" ]]; then
-    security_token_line=""
-    security_token_header=""
-  else
-    security_token_line=$'\n'"x-amz-security-token:${security_token}"
-    security_token_header=";x-amz-security-token"
-  fi
-  canonical_headers="${content_md5_line}${content_type_line}host:${host}
-${content_sha256_line}x-amz-date:${date}${security_token_line}
+  sorted_headers=($(array_sort "${headers[@]}"))
+  sorted_delimited_headers="$(printf "%s\n" "${sorted_headers[@]}")"
+  sorted_headers_list=($(array_sort "${headers_list[@]}"))
+  sorted_delimited_headers_list="$(printf "%s;" "${sorted_headers_list[@]}")"
 
-${content_md5_header}${content_type_header}host;${content_sha256_header}x-amz-date${security_token_header}"
+  canonical_headers="${sorted_delimited_headers}
+
+${sorted_delimited_headers_list%;}"
   output_handler "${FUNCNAME[0]}" "${canonical_headers}"
 }
 
@@ -337,7 +311,32 @@ assume_role() {
     AWS_ACCESS_KEY_ID="$(get_access_key_id "${assume_role_response}")"
     AWS_SECRET_ACCESS_KEY="$(get_secret_access_key "${assume_role_response}")"
     security_token="$(get_session_token "${assume_role_response}")"
+    security_token_header="x-amz-security-token:${security_token}"
   else
     _PRINT_HELP=yes die "Only 'credential_source = Environment' supported."
   fi
+}
+
+# Inspired by array::sort() from https://github.com/labbots/bash-utility
+array_sort() {
+    declare -a array=("$@")
+    declare -a sorted
+    declare noglobtate
+    noglobtate="$(shopt -po noglob)"
+    set -o noglob
+    declare IFS=$'\n'
+    sorted=($(sort <<< "${array[*]}"))
+    unset IFS
+    eval "${noglobtate}"
+    output_handler "${FUNCNAME[0]}" "$(printf "%s\n" "${sorted[@]}")"
+}
+
+# Inspired by array::contains() from https://github.com/labbots/bash-utility
+array_contains() {
+    declare query="${1:-}"
+    shift
+    for element in "${@}"; do
+        [[ "${element}" == "${query}" ]] && return 0
+    done
+    return 1
 }

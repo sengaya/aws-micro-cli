@@ -83,8 +83,11 @@ Not supported:
 
 Options:
 
-    --content-type (string)
+    --acl (string)
     --no-guess-mime-type (boolean)
+    --sse (string)
+    --storage-class (string)
+    --content-type (string)
 
 ---
 
@@ -129,14 +132,17 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 
 - Command `s3api create-bucket` implemented.
 - Command `sts assume-role` implemented.
+- Option `--acl` for `s3 cp` implemented.
 - Option `--no-guess-mime-type` for `s3 cp` implemented.
+- Option `--sse` for `s3 cp` implemented.
+- Option `--storage-class` for `s3 cp` implemented.
 - Option `--no-sign-request` implemented.
 - Option `--profile` implemented.
 - Environment variable `AWS_CONFIG_FILE` supported.
 
 #### Changed
 
-- If `file` is missing, no content type is set and warning is print.
+- If `file` is missing, no content type is set and a warning is print.
 - When region us-east-1 is set, the local endpoint will be used (e.g. `bucket.s3.us-east-1.amazonaws.com`) instead of the global one.
 
 #### Fixed
