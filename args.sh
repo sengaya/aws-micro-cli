@@ -198,7 +198,7 @@ Invalid choice: '${_arg_storage_class}'" 1
         storage_class_header="x-amz-storage-class:${_arg_storage_class}"
         ;;
       --version)
-        echo "$0 v0.1.0"
+        echo "$0 v0.2.0"
         exit 0
         ;;
       *)

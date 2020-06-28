@@ -18,13 +18,8 @@ sts_assume-role() {
       ${dryrun} curl ${curl_output} --fail "${request_url}" --data "${body}"
   else
     headers=("host:$(get_host_from_request_url "$request_url")" "x-amz-date:${date}" "content-type:application/x-www-form-urlencoded;charset=utf-8" "${security_token_header:-}")
-    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
-    canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
-    header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
-    curl_headers="$(echo "${canonical_and_signed_headers}" | create_curl_headers)"
-    string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
-    signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
-    authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
+    set_headers
+
     # shellcheck disable=SC2086
     ${dryrun} curl ${curl_output} --fail \
       "${request_url}" \

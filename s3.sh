@@ -37,13 +37,7 @@ s3_ls() {
       "${request_url}?list-type=2&prefix=&delimiter=%2F&encoding-type=url" | "${formatter}"
   else
     headers=("host:$(get_host_from_request_url "$request_url")" "x-amz-content-sha256:${content_sha256}" "x-amz-date:${date}" "${security_token_header:-}")
-    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
-    canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
-    header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
-    curl_headers="$(echo "${canonical_and_signed_headers}" | create_curl_headers)"
-    string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
-    signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
-    authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
+    set_headers
 
     # shellcheck disable=SC2086
     ${dryrun} curl ${curl_output} --fail \
@@ -111,15 +105,8 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
   else
     date="$(date -u +%Y%m%dT%H%M%SZ)"
     short_date="${date%%T*}"
-
     headers=("host:$(get_host_from_request_url "$request_url")" "x-amz-content-sha256:${content_sha256}" "x-amz-date:${date}" "${content_md5}" "${content_type}" "${security_token_header:-}" "${sse_header:-}" "${storage_class_header:-}" "${acl_header:-}")
-    canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
-    canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
-    header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
-    curl_headers="$(echo "${canonical_and_signed_headers}" | create_curl_headers)"
-    string_to_sign="$(create_string_to_sign "${date}" "${short_date}/${region}/${service}/aws4_request" "${canonical_request}")"
-    signature="$(create_signature "${string_to_sign}" "${short_date}" "${region}" "${service}")"
-    authorization_header="$(create_authorization_header "${signature}" "${short_date}" "${region}" "${service}" "${header_list}")"
+    set_headers
 
     if [[ "${http_method}" == "PUT" ]]; then
       # shellcheck disable=SC2086

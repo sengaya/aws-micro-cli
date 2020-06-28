@@ -1,6 +1,8 @@
 ## aws-micro-cli
 
-This tool aims to be a minimalist replacement for the `aws` command line utility. It's implemented in Bash with only a few dependencies to other tools. It can be used for example together with lightweight Linux distributions such as [Alpine Linux](https://alpinelinux.org/) to build very small docker images. It only supports a very limited number of commands and options but for these commands and options it aims to be as close as possible to the original. For example
+This tool is a minimalist replacement for `aws`, the [command line interface to Amazon Web Services](https://github.com/aws/aws-cli). It's implemented in Bash with only a few dependencies to other tools. The requests to the AWS API endpoints are done with [curl](https://curl.haxx.se/).
+
+It can be used for example together with lightweight Linux distributions such as [Alpine Linux](https://alpinelinux.org/) to build very small docker images. It only supports a very limited number of commands and options but for these commands and options it aims to be as close as possible to the original. For example
 
 ```
     aws s3 cp foo.css s3://some-bucket/ --content-type text/css
@@ -58,7 +60,8 @@ Global options:
        --endpoint-url (string)
 
        --profile (string)
-       (only `role_arn` in combination with `credential_source=Environment` is currently supported, no caching of temporary credentials)
+       (only `role_arn` in combination with `credential_source=Environment` is currently supported, no
+       caching of temporary credentials)
 
        --region (string)
 
@@ -70,8 +73,7 @@ Global options:
 
 `aws-micro` will only use virtual-hosted–style requests when used with AWS. This could break e.g. requests to buckets with `.` in the name. If a custom endpoint-url is set, a path-style request is used. See https://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html and https://aws.amazon.com/blogs/aws/amazon-s3-path-deprecation-plan-the-rest-of-the-story/
 
-The content type detection will differ from `aws`. `aws-micro` should be able to detect more file types because it uses the `file` command which utilizes libmagic. See also https://github.com/aws/aws-cli/issues/2163.
-If `file` is not available, `text/plain` will be used as a fallback.
+The content type detection will differ from `aws`. `aws-micro` should be able to detect more file types because it uses the `file` command which utilizes libmagic. See also https://github.com/aws/aws-cli/issues/2163. If `file` is not available no content type is set and a warning is print.
 
 ---
 
@@ -126,7 +128,7 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 [kac]: https://keepachangelog.com/
 [semver]: https://semver.org/
 
-### [Unreleased]
+### [v0.2.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.2.0) - 2020-06-28
 
 #### Added
 
