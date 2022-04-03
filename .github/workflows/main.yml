@@ -52,16 +52,3 @@ jobs:
         run: "apk add --no-cache bash openssl curl file bats"
       - name: Run BATS tests
         run: bats tests/
-  test-on-container-centos:
-    runs-on: ubuntu-latest
-    container: ${{ matrix.container }}
-    strategy:
-      matrix:
-        container: ["centos:7"]
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Install BATS
-        run: "yum install -y openssl file && curl -L http://download.opensuse.org/repositories/devel:/tools/openSUSE_Factory_ARM/noarch/bats-1.5.0-27.d_t.3.noarch.rpm -o /tmp/bats.rpm && rpm -i /tmp/bats.rpm"
-      - name: Run BATS tests
-        run: bats tests/
