@@ -123,12 +123,12 @@ create_canonical_and_signed_headers() {
     headers_list+=("${header_name}")
   done
 
-  sorted_headers=($(array_sort "${headers[@]}"))
-  sorted_delimited_headers="$(printf "%s\n" "${sorted_headers[@]}")"
-  sorted_headers_list=($(array_sort "${headers_list[@]}"))
+  sorted_headers="$(array_sort "${headers[@]}")"
+  sorted_headers_list=()
+  while IFS='' read -r line; do sorted_headers_list+=("$line"); done < <(array_sort "${headers_list[@]}")
   sorted_delimited_headers_list="$(printf "%s;" "${sorted_headers_list[@]}")"
 
-  canonical_headers="${sorted_delimited_headers}
+  canonical_headers="${sorted_headers}
 
 ${sorted_delimited_headers_list%;}"
   output_handler "${FUNCNAME[0]}" "${canonical_headers}"
@@ -271,9 +271,16 @@ create_curl_headers() {
   | sed -e 's/.*/-H &/'
 }
 
-# sets curl_headers and authorization_header
+# sets curl_headers and authorization_header, array "${headers[@]}" must be set before calling this function
 set_headers() {
-  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers[@]}")"
+  declare headers_without_empty=()
+  for header in "${headers[@]}"; do
+    if [ -n "${header}" ]; then
+      headers_without_empty+=("${header}")
+    fi
+  done
+
+  canonical_and_signed_headers="$(create_canonical_and_signed_headers "${headers_without_empty[@]}")"
   canonical_request="$(create_canonical_request "${http_method}" "${request_url}" "${canonical_and_signed_headers}" "${content_sha256}")"
   header_list="$(echo "${canonical_and_signed_headers}" | tail -1)"
   curl_headers="$(echo "${canonical_and_signed_headers}" | create_curl_headers)"
@@ -336,7 +343,8 @@ array_sort() {
     noglobtate="$(shopt -po noglob)"
     set -o noglob
     declare IFS=$'\n'
-    sorted=($(sort <<< "${array[*]}"))
+    sorted=()
+    while IFS=$'\n' read -r line; do sorted+=("$line"); done < <(sort <<< "${array[*]}")
     unset IFS
     eval "${noglobtate}"
     output_handler "${FUNCNAME[0]}" "$(printf "%s\n" "${sorted[@]}")"

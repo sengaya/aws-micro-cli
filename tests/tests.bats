@@ -132,10 +132,22 @@
 }
 
 @test "create_canonical_and_signed_headers should return a valid response" {
-  headers=("host:$(get_host_from_request_url "http://127.0.0.1:9000/bucket/key")" "x-amz-content-sha256:1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f" "x-amz-date:20200525T185439Z" "content-md5:OnjOwdnDQYeocbNO+GjERg==" "content-type:text/plain" "")
+  headers=("host:$(get_host_from_request_url "http://127.0.0.1:9000/bucket/key")" "x-amz-content-sha256:1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f" "x-amz-date:20200525T185439Z" "content-md5:OnjOwdnDQYeocbNO+GjERg==" "content-type:text/plain")
   run create_canonical_and_signed_headers "${headers[@]}"
   [ "$status" -eq 0 ]
   [ "$output" = "content-md5:OnjOwdnDQYeocbNO+GjERg==
+content-type:text/plain
+host:127.0.0.1:9000
+x-amz-content-sha256:1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f
+x-amz-date:20200525T185439Z
+
+content-md5;content-type;host;x-amz-content-sha256;x-amz-date" ]
+}
+
+@test "set_headers should remove empty headers" {
+  headers=("" "host:$(get_host_from_request_url "http://127.0.0.1:9000/bucket/key")" "x-amz-content-sha256:1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f" "" "x-amz-date:20200525T185439Z" "content-md5:OnjOwdnDQYeocbNO+GjERg==" "content-type:text/plain" "")
+  set_headers
+  [ "${canonical_and_signed_headers}" = "content-md5:OnjOwdnDQYeocbNO+GjERg==
 content-type:text/plain
 host:127.0.0.1:9000
 x-amz-content-sha256:1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f

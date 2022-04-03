@@ -98,7 +98,10 @@ Options:
 Output date/time will always be in UTC while `aws` would calculate the date/time for your timezone.
 No additional option supported.
 
-Known bug: Listing keys inside directories is not working correctly.
+Known bugs:
+
+- Listing keys inside folders is not working correctly.
+- If the response is too big and split into multiple chunks (tag `<NextContinuationToken>` in the response), only the keys of the first response are shown and no further requests are done.
 
 ### s3api
 
