@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Run shellcheck
         run: ./build-single-executable aws-micro-release && shellcheck aws-micro-release
   test-on-vm:
@@ -21,7 +21,7 @@ jobs:
         os: [ubuntu-20.04, ubuntu-18.04, macos-11, macos-10.15]
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install BATS
         run: "[[ -f /usr/local/bin/bats ]] && brew unlink bats || true ; brew install bats-core"
       - name: Run BATS tests
@@ -34,7 +34,7 @@ jobs:
         container: ["ubuntu:20.04", "ubuntu:18.04", "debian:11-slim", "debian:10-slim", "debian:9-slim"]
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install dependencies and BATS
         run: "apt-get update && apt-get install -y openssl curl file bats"
       - name: Run BATS tests
@@ -47,7 +47,7 @@ jobs:
         container: ["alpine:edge", "alpine:3.15", "alpine:3.14", "alpine:3.13"]
     steps:
       - name: Check out code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Install dependencies and BATS
         run: "apk add --no-cache bash openssl curl file bats"
       - name: Run BATS tests
