@@ -81,7 +81,7 @@ md5_base64() {
 
 sha256_hmac() {
   declare -r sig="$1"
-  openssl sha256 -mac HMAC -macopt "$sig" -hex | sed 's/(stdin)= //'
+  openssl sha256 -mac HMAC -macopt "$sig" -hex | sed 's/.*(stdin)= //'
 }
 
 sha256() {
@@ -172,7 +172,7 @@ create_signature() {
   serviceKey="$(echo -n "${service}" | sha256_hmac hexkey:"${regionKey}")"
   signingKey="$(echo -n "aws4_request" | sha256_hmac hexkey:"${serviceKey}")"
 
-  echo -n "${string_to_sign}" | openssl dgst -sha256 -mac HMAC -macopt hexkey:"${signingKey}" | sed 's/(stdin)= //'
+  echo -n "${string_to_sign}" | openssl dgst -sha256 -mac HMAC -macopt hexkey:"${signingKey}" | sed 's/.*(stdin)= //'
 }
 
 create_authorization_header() {
