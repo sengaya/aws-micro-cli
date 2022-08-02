@@ -131,6 +131,24 @@
   [ "$output" = "/bucket" ]
 }
 
+@test "get_canonical_uri should return /bucket for request_url with parameters" {
+  run get_canonical_uri "http://127.0.0.1:9000/bucket?list-type=2&prefix=&delimiter=%2F&encoding-type=url"
+  [ "$status" -eq 0 ]
+  [ "$output" = "/bucket" ]
+}
+
+@test "get_canonical_query_string should return sorted query string for request_url with parameters" {
+  run get_canonical_query_string "http://127.0.0.1:9000/bucket?list-type=2&prefix=&delimiter=%2F&encoding-type=url"
+  [ "$status" -eq 0 ]
+  [ "$output" = "delimiter=%2F&encoding-type=url&list-type=2&prefix=" ]
+}
+
+@test "get_canonical_query_string should return empty string for request_url without parameters" {
+  run get_canonical_query_string "http://127.0.0.1:9000/bucket"
+  [ "$status" -eq 0 ]
+  [ "$output" = "" ]
+}
+
 @test "create_canonical_and_signed_headers should return a valid response" {
   headers=("host:$(get_host_from_request_url "http://127.0.0.1:9000/bucket/key")" "x-amz-content-sha256:1337133a21760f3a65ba63dde142291b54c957f2d5ffa8741a769b06d779156f" "x-amz-date:20200525T185439Z" "content-md5:OnjOwdnDQYeocbNO+GjERg==" "content-type:text/plain")
   run create_canonical_and_signed_headers "${headers[@]}"
@@ -309,58 +327,14 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
   [ "$output" = "AWS4-HMAC-SHA256 Credential=access-key-id/20200527/eu-west-3/s3/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=dcc54ccf39e5e32b8eea256eb5edde15b6afa8f90a2107b287dfb237fe025c00" ]
 }
 
-@test "create_request_url should return a valid endpoint (us-east-1)" {
-  run create_request_url "s3" "" "us-east-1" "bucket" "key"
-  [ "$status" -eq 0 ]
-  [ "$output" = "https://bucket.s3.us-east-1.amazonaws.com/key" ]
-}
-
-@test "create_request_url should return a valid endpoint (us-east-1, only bucket)" {
-  run create_request_url "s3" "" "us-east-1" "bucket" ""
-  [ "$status" -eq 0 ]
-  [ "$output" = "https://bucket.s3.us-east-1.amazonaws.com/" ]
-}
-
-@test "create_request_url should return a valid endpoint (other region)" {
-  run create_request_url "s3" "" "eu-central-1" "bucket" "key"
-  [ "$status" -eq 0 ]
-  [ "$output" = "https://bucket.s3.eu-central-1.amazonaws.com/key" ]
-}
-
-@test "create_request_url should return a valid endpoint (no region, only bucket)" {
-  run create_request_url "s3" "" "" "bucket" ""
-  [ "$status" -eq 0 ]
-  [ "$output" = "https://bucket.s3.amazonaws.com/" ]
-}
-
-@test "create_request_url should return a valid endpoint (custom endpoint)" {
-  run create_request_url "s3" "https://custom.endpoint" "eu-central-1" "bucket" "key"
-  [ "$status" -eq 0 ]
-  [ "$output" = "https://custom.endpoint/bucket/key" ]
-}
-
-@test "create_request_url should return a valid endpoint (custom endpoint, only bucket)" {
-  run create_request_url "s3" "https://custom.endpoint/" "foo" "bucket" ""
-  [ "$status" -eq 0 ]
-  [ "$output" = "https://custom.endpoint/bucket" ]
-}
-
-@test "create_request_url should return a valid endpoint (custom endpoint, no bucket/key)" {
-  run create_request_url "s3" "https://custom.endpoint/" "foo" "" ""
-  [ "$status" -eq 0 ]
-  [ "$output" = "https://custom.endpoint/" ]
-}
-
-@test "create_request_url should return a valid endpoint (custom endpoint, no bucket/key, slash added)" {
-  run create_request_url "s3" "https://custom.endpoint" "foo" "" ""
-  [ "$status" -eq 0 ]
-  [ "$output" = "https://custom.endpoint/" ]
-}
-
-@test "create_request_url should return a valid endpoint if no bucket is supplied (other region)" {
-  run create_request_url "s3" "" "eu-central-1" "" ""
-  [ "$status" -eq 0 ]
-  [ "$output" = "https://s3.eu-central-1.amazonaws.com/" ]
+# test against data gathered from from aws cli
+@test "create_request_url should return a valid request url (using create_request_url_test.data)" {
+  grep -v "^#" tests/create_request_url_test.data | while IFS='|' read service command custom_endpoint region bucket key result_url ; do
+    echo "Run create_request_url with ${service} ${command} ${custom_endpoint} ${region} ${bucket} ${key}"
+    run create_request_url "${service}" "${command}" "${custom_endpoint}" "${region}" "${bucket}" "${key}"
+    [ "$status" -eq 0 ]
+    [ "$output" = "${result_url}" ]
+  done
 }
 
 @test "xml_to_text_for_buckets should return list of buckets" {
@@ -377,41 +351,13 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
 2020-05-13 07:26:37 test-bucket2" ]
 }
 
-@test "xml_to_text_for_keys should return list of keys" {
+@test "xml_to_text_for_keys should list keys" {
   output="$(echo '<?xml version="1.0" encoding="UTF-8"?>
 <ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>test-bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>10000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>test.txt</Key><LastModified>2020-05-18T19:53:40.926Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>17be0943d07d67113ab42f028a8bd346a913fc98d79da0dfb84754dee3a89aca</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents></ListBucketResult>' | xml_to_text_for_keys)"
   [ "$output" = "2020-05-18 19:53:40          4 test.txt" ]
 }
 
-@test "xml_to_text_for_keys should return list of keys and directories" {
-  output="$(echo '<?xml version="1.0" encoding="UTF-8"?>
-<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>test-bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>10000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>dir/test2.txt</Key><LastModified>2020-05-18T22:14:30.382Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>17be0943d07d67113ab42f028a8bd346a913fc98d79da0dfb84754dee3a89aca</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>test.txt</Key><LastModified>2020-05-18T19:53:40.926Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents></ListBucketResult>' | xml_to_text_for_keys)"
-  [ "$output" = "                           PRE dir/
-2020-05-18 19:53:40          4 test.txt" ]
-}
-
-@test "xml_to_text_for_keys should return list of keys and directories in correct order" {
-  output="$(echo '<?xml version="1.0" encoding="UTF-8"?>
-<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>test-bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>10000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>random-file</Key><LastModified>2020-05-18T21:44:53.978Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>54</Size><Owner><ID>17be0943d07d67113ab42f028a8bd346a913fc98d79da0dfb84754dee3a89aca</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>sub1/sub2/test2.txt</Key><LastModified>2020-05-18T21:52:23.410Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>test.txt</Key><LastModified>2020-05-18T19:53:40.934Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>test2.txt</Key><LastModified>2020-05-18T21:17:13.617Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>foobar.txt</Key><LastModified>2020-05-18T19:53:40.938Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>upload.txt</Key><LastModified>2020-05-18T19:53:40.942Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents></ListBucketResult>' | xml_to_text_for_keys)"
-  [ "$output" = "                           PRE sub1/
-2020-05-18 21:44:53         54 random-file
-2020-05-18 19:53:40          4 test.txt
-2020-05-18 21:17:13          4 test2.txt
-2020-05-18 19:53:40          4 foobar.txt
-2020-05-18 19:53:40          4 upload.txt" ]
-}
-
-@test "xml_to_text_for_keys should return directories only once" {
-  output="$(echo '<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>test-bucket</Name><Prefix></Prefix><Marker></Marker><MaxKeys>10000</MaxKeys><Delimiter></Delimiter><IsTruncated>false</IsTruncated><Contents><Key>random-file</Key><LastModified>2020-05-18T21:44:53.978Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>54</Size><Owner><ID>17be0943d07d67113ab42f028a8bd346a913fc98d79da0dfb84754dee3a89aca</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>sub1/sub2/test2.txt</Key><LastModified>2020-05-18T21:52:23.410Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>sub1/test.txt</Key><LastModified>2020-05-20T21:32:57.045Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>test.txt</Key><LastModified>2020-05-18T19:53:40.934Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>test2.txt</Key><LastModified>2020-05-18T21:17:13.617Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>foobar.txt</Key><LastModified>2020-05-18T19:53:40.938Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>upload.txt</Key><LastModified>2020-05-18T19:53:40.942Z</LastModified><ETag>&#34;1cae7d2f9dfb30f1bbf5e3e8a698a45d&#34;</ETag><Size>4</Size><Owner><ID>02d6176db174dc93cb1b899f7c6078f08654445fe8cf1b6ce98d8855f66bdbf4</ID><DisplayName></DisplayName></Owner><StorageClass>STANDARD</StorageClass></Contents></ListBucketResult>' | xml_to_text_for_keys)"
-  [ "$output" = "                           PRE sub1/
-2020-05-18 21:44:53         54 random-file
-2020-05-18 19:53:40          4 test.txt
-2020-05-18 21:17:13          4 test2.txt
-2020-05-18 19:53:40          4 foobar.txt
-2020-05-18 19:53:40          4 upload.txt" ]
-}
-
-@test "xml_to_text_for_keys should return also prefixes" {
+@test "xml_to_text_for_keys should list keys and prefixes" {
   output="$(echo '<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>landsat-pds</Name><Prefix></Prefix><KeyCount>12</KeyCount><MaxKeys>1000</MaxKeys><Delimiter>/</Delimiter><EncodingType>url</EncodingType><IsTruncated>false</IsTruncated><Contents><Key>index.html</Key><LastModified>2017-05-17T13:42:27.000Z</LastModified><ETag>&quot;ed18c8120c2e8303024d560d1a618158&quot;</ETag><Size>23767</Size><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>robots.txt</Key><LastModified>2016-08-19T17:12:04.000Z</LastModified><ETag>&quot;b4714554348d9b6c1df58ddf5da4b14c&quot;</ETag><Size>105</Size><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>run_info.json</Key><LastModified>2020-06-10T14:52:05.000Z</LastModified><ETag>&quot;20a76d643fddd15ad61cb29b423021c4&quot;</ETag><Size>73</Size><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>run_list.txt</Key><LastModified>2020-06-10T14:52:05.000Z</LastModified><ETag>&quot;31febe6e72a2a2fdcc014f557f2b25c3&quot;</ETag><Size>3550</Size><StorageClass>STANDARD</StorageClass></Contents><Contents><Key>scene_list.gz</Key><LastModified>2018-08-29T00:45:15.000Z</LastModified><ETag>&quot;39c34d489777a595b36d0af5726007db&quot;</ETag><Size>45603307</Size><StorageClass>INTELLIGENT_TIERING</StorageClass></Contents><CommonPrefixes><Prefix>L8/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>c08f0e10-3a51-4a81-817f-76e5a3fcfff5/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>c1/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>runs/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>tarq/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>tarq_corrupt/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>test/</Prefix></CommonPrefixes></ListBucketResult>' | xml_to_text_for_keys)"
   [ "$output" = "                           PRE L8/
                            PRE c08f0e10-3a51-4a81-817f-76e5a3fcfff5/
@@ -425,6 +371,34 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
 2020-06-10 14:52:05         73 run_info.json
 2020-06-10 14:52:05       3550 run_list.txt
 2018-08-29 00:45:15   45603307 scene_list.gz" ]
+}
+
+@test "xml_to_text_for_keys should list keys with 0-byte object" {
+  output="$(echo '<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>fah-public-data-covid19-cryptic-pockets</Name><Prefix>human/</Prefix><KeyCount>4</KeyCount><MaxKeys>1000</MaxKeys><Delimiter>/</Delimiter><EncodingType>url</EncodingType><IsTruncated>false</IsTruncated><Contents><Key>human/</Key><LastModified>2020-09-10T16:23:03.000Z</LastModified><ETag>&quot;d41d8cd98f00b204e9800998ecf8427e&quot;</ETag><Size>0</Size><StorageClass>STANDARD</StorageClass></Contents><CommonPrefixes><Prefix>human/ace2/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>human/il6/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>human/il6r/</Prefix></CommonPrefixes></ListBucketResult>' | xml_to_text_for_keys)"
+  should="                           PRE ace2/
+                           PRE il6/
+                           PRE il6r/
+2020-09-10 16:23:03          0 "
+  [ "$output" = "$should" ]
+}
+
+@test "xml_to_text_for_keys should not return two newlines" {
+  output="$(echo '<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>fah-public-data-covid19-cryptic-pockets</Name><Prefix></Prefix><KeyCount>5</KeyCount><MaxKeys>1000</MaxKeys><Delimiter>/</Delimiter><EncodingType>url</EncodingType><IsTruncated>false</IsTruncated><CommonPrefixes><Prefix>HCoV-NL63/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>MERS-CoV/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>SARS-CoV-1/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>SARS-CoV-2/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>human/</Prefix></CommonPrefixes></ListBucketResult>' | xml_to_text_for_keys | xxd)"
+  should="$(echo '                           PRE HCoV-NL63/
+                           PRE MERS-CoV/
+                           PRE SARS-CoV-1/
+                           PRE SARS-CoV-2/
+                           PRE human/' | xxd )"
+  [ "$output" = "$should" ]
+}
+
+@test "xml_to_text_for_keys should not remove folder if it does not end with a slash" {
+  output="$(echo '<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>fah-public-data-covid19-cryptic-pockets</Name><Prefix>human</Prefix><KeyCount>1</KeyCount><MaxKeys>1000</MaxKeys><Delimiter>/</Delimiter><EncodingType>url</EncodingType><IsTruncated>false</IsTruncated><CommonPrefixes><Prefix>human/</Prefix></CommonPrefixes></ListBucketResult>' | xml_to_text_for_keys)"
+  should="                           PRE human/"
+  echo "$output"
+  [ "$output" = "$should" ]
 }
 
 @test "get_mime should return text/plain" {

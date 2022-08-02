@@ -42,11 +42,22 @@ sleep 3 # minio needs some time to start up
 "${e2e_path}/aws-micro" s3 --endpoint-url http://127.0.0.1:19999 cp s3://test-bucket/aws-micro ${e2e_path}/.aws-micro > /dev/null || fail_and_exit
 cmp --silent aws-micro ${e2e_path}/.aws-micro || fail_and_exit
 "${e2e_path}/aws-micro" s3 cp --no-sign-request s3://landsat-pds/robots.txt "${e2e_path}/robots.txt" | grep -q 'download: s3://landsat-pds/robots.txt to /tmp/.aws-micro_e2etest_tmp/robots.txt' || fail_and_exit
-# s3 ls
-"${e2e_path}/aws-micro" --endpoint-url http://127.0.0.1:19999 s3 ls | grep test-bucket > /dev/null || fail_and_exit
-"${e2e_path}/aws-micro" s3 --endpoint-url http://127.0.0.1:19999 ls s3://test-bucket/ | grep aws-micro > /dev/null || fail_and_exit
-"${e2e_path}/aws-micro" s3 --endpoint-url http://127.0.0.1:19999 ls test-bucket/ | grep aws-micro > /dev/null || fail_and_exit
-"${e2e_path}/aws-micro" s3 ls --no-sign-request landsat-pds | grep robots.txt > /dev/null || fail_and_exit
+# s3 ls - diff with aws cli with minio
+default_options='s3 ls --endpoint-url http://127.0.0.1:19999'
+for options in "" "s3://test-bucket/" "test-bucket/" ; do
+  diff <(TZ=0 aws ${default_options} ${options}) <("${e2e_path}/aws-micro" ${default_options} ${options}) || fail_and_exit
+done
+# s3 ls - diff with aws cli with public s3 buckets
+diff <(TZ=0 aws s3 ls --no-sign-request landsat-pds) <("${e2e_path}/aws-micro" s3 ls --no-sign-request landsat-pds) || fail_and_exit
+# test folders and keys
+# "" <- bucket, ls should return all top level objects
+# "/" <- bucket with / added, ls should return all top level objects
+# "/human" <- folder, ls should return only "/human"
+# "/human/" <- folder with / added, ls should return objects of the folder
+for key in "" "/" "/human" "/human/" ; do
+  url="s3://fah-public-data-covid19-cryptic-pockets${key}"
+  diff <(TZ=0 aws s3 ls --no-sign-request ${url} --region us-east-2) <("${e2e_path}/aws-micro" s3 ls --no-sign-request ${url} --region us-east-2) || fail_and_exit
+done
 
 # cleanup
 pkill -f "minio --quiet server --address :19999 ${storage_path}"

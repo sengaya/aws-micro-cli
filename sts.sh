@@ -6,7 +6,7 @@ sts_assume-role() {
   date="$(date -u +%Y%m%dT%H%M%SZ)"
   short_date="${date%%T*}"
   http_method="POST"
-  request_url="$(create_request_url "${service}" "${_arg_endpoint_url}" "${region}")"
+  request_url="$(create_request_url "${service}" "" "${_arg_endpoint_url}" "${region}")"
 
   body="$(curl -Gso /dev/null -w '%{url_effective}' \
           --data 'Action=AssumeRole&Version=2011-06-15' \

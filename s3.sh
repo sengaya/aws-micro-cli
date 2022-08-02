@@ -30,11 +30,10 @@ s3_ls() {
   date="$(date -u +%Y%m%dT%H%M%SZ)"
   short_date="${date%%T*}"
 
-  request_url="$(create_request_url "${service}" "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
+  request_url="$(create_request_url "${service}" ls "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
 
   if [[ "${_arg_no_sign_request}" = "on" ]]; then
-    ${dryrun} curl ${curl_output} --fail \
-      "${request_url}?list-type=2&prefix=&delimiter=%2F&encoding-type=url" | "${formatter}"
+    ${dryrun} curl ${curl_output} --fail "${request_url}" | "${formatter}"
   else
     headers=("host:$(get_host_from_request_url "$request_url")" "x-amz-content-sha256:${content_sha256}" "x-amz-date:${date}" "${security_token_header:-}")
     set_headers
@@ -75,7 +74,7 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
     content_md5=""
     content_type=""
     content_sha256="${empty_string_sha256}"
-    request_url="$(create_request_url "${service}" "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
+    request_url="$(create_request_url "${service}" cp "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
   else
     http_method="PUT"
     bucket="$(get_bucket_from_s3url "${destination}")"
@@ -85,7 +84,7 @@ Error: Invalid argument type"  #  or <S3Uri> <S3Uri> (not yet implemented)
     if [[ -z "$key" ]]; then
       key="${source##*/}"
     fi
-    request_url="$(create_request_url "${service}" "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
+    request_url="$(create_request_url "${service}" cp "${_arg_endpoint_url}" "${region}" "${bucket}" "${key}")"
     protocol="$(get_protocol_from_request_url "${request_url}")"
     if [[ "${protocol}" = "https" ]];then
       content_sha256="UNSIGNED-PAYLOAD"

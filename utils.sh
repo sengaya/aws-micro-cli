@@ -110,8 +110,25 @@ get_protocol_from_request_url() {
 get_canonical_uri() {
   declare -r request_url="${1}"
 
-  remove_protocol="${request_url#*://}"
-  output_handler "${FUNCNAME[0]}" "/${remove_protocol#*/}"
+  _canonical_uri="${request_url#*://}"
+  canonical_uri="/${_canonical_uri#*/}"
+  output_handler "${FUNCNAME[0]}" "${canonical_uri%%\?*}"
+}
+
+get_canonical_query_string() {
+  declare -r request_url="${1}"
+
+  # "?" indicates a query string, extract, split, sort and join again
+  if [[ ${request_url} == *"?"* ]]; then
+    unsorted_canonical_query_string="${request_url#*\?}"
+    IFS=$'&' read -r -a parameter_list <<< "$unsorted_canonical_query_string"
+    while IFS=$'\n' read -r line; do sorted_parameters+=("$line"); done < <(array_sort "${parameter_list[@]}")
+    canonical_query_string="$(join_by '&' "${sorted_parameters[@]}")"
+  else
+    canonical_query_string=""
+  fi
+
+  output_handler "${FUNCNAME[0]}" "${canonical_query_string}"
 }
 
 create_canonical_and_signed_headers() {
@@ -141,9 +158,10 @@ create_canonical_request() {
   declare -r content_sha256="${4}"
 
   canonical_uri="$(get_canonical_uri "${request_url}")"
+  canonical_query_string="$(get_canonical_query_string "${request_url}")"
   output_handler "${FUNCNAME[0]}" "${http_method}
 ${canonical_uri}
-
+${canonical_query_string}
 ${canonical_headers}
 ${content_sha256}"
 }
@@ -186,29 +204,62 @@ create_authorization_header() {
 SignedHeaders=${signed_headers}, Signature=${signature}"
 }
 
+# from https://stackoverflow.com/a/10660730/1306877
+rawurlencode() {
+  local string="${1}"
+  local strlen=${#string}
+  local encoded=""
+  local pos c o
+
+  for (( pos=0 ; pos<strlen ; pos++ )); do
+     c=${string:$pos:1}
+     case "$c" in
+        [-_.~a-zA-Z0-9] ) o="${c}" ;;
+        * )               printf -v o '%%%02X' "'$c"
+     esac
+     encoded+="${o}"
+  done
+  echo "${encoded}"
+}
+
 create_request_url() {
   declare -r service="${1}"
-  declare -r custom_endpoint="${2}"
-  declare -r region="${3}"
-  declare -r bucket="${4:-}"
-  declare -r key="${5:-}"
+  declare -r command="${2}"
+  declare -r custom_endpoint="${3}"
+  declare -r region="${4}"
+  declare -r bucket="${5:-}"
+  declare -r key="${6:-}"
 
-  if [[ -z "${custom_endpoint}" ]];then
-    if [[ -z "${bucket}" && -z "${key}" ]]; then
-      url="https://${service}.${region}.amazonaws.com/"
-    elif [[ -z "${key}" ]]; then
-      url="https://${bucket}.${service}.${region}.amazonaws.com/"
-    else
-      url="https://${bucket}.${service}.${region}.amazonaws.com/${key}"
-    fi
+  # s3 ls
+  if [[ "${service}" == "s3" ]] && [[ "${command}" == "ls" ]]; then
+      if [[ -z "${custom_endpoint}" ]];then
+        url="https://${bucket}.${service}.${region}.amazonaws.com/?list-type=2&prefix=$(rawurlencode "${key}")&delimiter=%2F&encoding-type=url"
+      else
+        if [[ -z "${bucket}" ]]; then
+          url="${custom_endpoint}/"
+        else
+          url="${custom_endpoint}/${bucket}?list-type=2&prefix=$(rawurlencode "${key}")&delimiter=%2F&encoding-type=url"
+        fi
+      fi
   else
-    [[ "${custom_endpoint}" == */ ]] && endpoint="$custom_endpoint" || endpoint="$custom_endpoint/"
-    if [[ -z "${bucket}" && -z "${key}" ]]; then
-      url="${endpoint}"
-    elif [[ -z "${key}" ]]; then
-      url="${endpoint}${bucket}"
+    # any other service / command
+    if [[ -z "${custom_endpoint}" ]];then
+      if [[ -z "${bucket}" && -z "${key}" ]]; then
+        url="https://${service}.${region}.amazonaws.com/"
+      elif [[ -z "${key}" ]]; then
+        url="https://${bucket}.${service}.${region}.amazonaws.com/"
+      else
+        url="https://${bucket}.${service}.${region}.amazonaws.com/${key}"
+      fi
     else
-      url="${endpoint}${bucket}/${key}"
+      # [[ "${custom_endpoint}" == */ ]] && endpoint="$custom_endpoint" || endpoint="$custom_endpoint/"
+      if [[ -z "${bucket}" && -z "${key}" ]]; then
+        url="${custom_endpoint}/"
+      elif [[ -z "${key}" ]]; then
+        url="${custom_endpoint}/${bucket}"
+      else
+        url="${custom_endpoint}/${bucket}/${key}"
+      fi
     fi
   fi
 
@@ -231,35 +282,60 @@ xml_to_text_for_buckets() {
     done
 }
 
-xml_to_text_for_keys() {
-  # 1) add newlines to have each key/prefix in a seperate line
-  # 2) grep for lines with keys/prefixes
-  # 3) add spaces before tags
-  # 4) add spaces after tags
-  # 5) get key/prefix name, size and date and reformat
+# from https://stackoverflow.com/a/7052168/1306877
+read_xml_dom() {
+  local IFS=\>
+  read -r -d \< entity content
+}
 
-  # for macos/bsd compatility we use a quoted string in sed, see https://stackoverflow.com/a/18410122/1306877
-  sed -E -e $'s:</?(Contents|CommonPrefixes)?>:&\\\n:g' \
-  | grep -e '^<Key>' -e '^<Prefix>' \
-  | sed -e 's:<: &:g' \
-  | sed -e 's:>:& :g' \
-  | while read -r _ key _ _ datetime_orig _ _ _ _ _ size _; do
-      datetime="${datetime_orig/T/ }"
-      if [[ "$key" =~ "/" ]]; then
-        datetime="                   "
-        size="PRE"
-        key="${key%%/*}/"
-        
+xml_to_text_for_keys() {
+  local content_flag=0
+  local commonprefix_flag=0
+  local key=""
+  local lastmodified=""
+  local size=""
+  local prefix=""
+
+  grep '<ListBucketResult' | while read_xml_dom; do
+    if [[ "${commonprefix_flag}" == 0 && "${entity}" == "Prefix" ]]; then
+      # only set folder if it does end with a slash
+      if [[ "${content: -1}" == "/" ]]; then
+        prefix="${content}"
       fi
-      printf "${datetime%.*} %+10s %s${key}\n" "${size}"
-    done | sed -n '
+    fi
+    if [[ "${entity}" == "CommonPrefixes" ]]; then
+      commonprefix_flag=1
+    fi
+    if [[ "${entity}" == "/CommonPrefixes" ]]; then
+      commonprefix_flag=0
+    fi
+    if [[ "${entity}" == "Contents" ]]; then
+      content_flag=1
+    fi
+    if [[ "${entity}" == "/Contents" ]]; then
+      printf "${lastmodified%.*} %+10s %s${key##"${prefix}"}\n" "${size}"
+      content_flag=0
+    fi
+    if [[ "${content_flag}" == 1 && "${entity}" == "LastModified" ]]; then
+      lastmodified="${content/T/ }"
+    fi
+    if [[ "${content_flag}" == 1 && "${entity}" == "Size" ]]; then
+      size="${content}"
+    fi
+    if [[ "${content_flag}" == 1 && "${entity}" == "Key" ]]; then
+      key="${content}"
+    fi
+    if [[ "${commonprefix_flag}" == 1 && "${entity}" == "Prefix" ]]; then
+      echo "                           PRE ${content##"${prefix}"}"
+    fi
+  done | sed -n '# Thanks to https://unix.stackexchange.com/a/587570/25979
 / PRE /p
 / PRE /!H
 ${
   x
   s|\n||
   p
-}' | uniq # Thanks to https://unix.stackexchange.com/a/587570/25979
+}' | sed '/^$/d' # remove double newlines
 }
 
 create_curl_headers() {
@@ -358,4 +434,11 @@ array_contains() {
         [[ "${element}" == "${query}" ]] && return 0
     done
     return 1
+}
+
+# from https://stackoverflow.com/a/17841619/1306877
+function join_by() {
+   local IFS="$1"
+   shift
+   echo "$*"
 }

@@ -20,15 +20,15 @@ This tool is not associated with Amazon in any way.
 
 Download the latest release, move it to some convenient location (e.g. `/usr/local/bin/`), set the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` and you're ready to go.
 
-Make sure you have required unix tools installed. Assuming fresh installation of macOS and minimal docker container images for the Linux distributions, you need to install:
+Make sure you have required unix tools installed. Assuming a fresh installation of macOS and minimal docker container images for the Linux distributions, you need to install:
 
-| OS     | required packages   | optional packages |
-| ------ | ------------------- | ----------------- |
-| macos  | -                   | -                 |
-| centos | openssl             | file              |
-| ubuntu | openssl, curl       | file              |
-| debian | openssl, curl       | file              |
-| alpine | openssl, curl, bash | file              |
+| OS                                       | required packages   | optional packages |
+| ---------------------------------------- | ------------------- | ----------------- |
+| [macOS](https://www.apple.com/macos/)    | -                   | -                 |
+| [Rocky Linux](https://rockylinux.org/)   | openssl             | file              |
+| [Ubuntu](https://ubuntu.com/)            | openssl, curl       | file              |
+| [Debian](https://www.debian.org/)        | openssl, curl       | file              |
+| [Alpine Linux](https://alpinelinux.org/) | openssl, curl, bash | file              |
 
 The package `file` is needed for content type detection.
 
@@ -100,7 +100,6 @@ No additional option supported.
 
 Known bugs:
 
-- Listing keys inside folders is not working correctly.
 - If the response is too big and split into multiple chunks (tag `<NextContinuationToken>` in the response), only the keys of the first response are shown and no further requests are done.
 
 ### s3api
@@ -130,6 +129,13 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 
 [kac]: https://keepachangelog.com/
 [semver]: https://semver.org/
+
+### [v0.2.1](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.2.1) - 2022-08-02
+
+#### Fixed
+
+- s3 ls lists keys inside folders correctly
+
 
 ### [v0.2.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.2.0) - 2020-06-28
 
