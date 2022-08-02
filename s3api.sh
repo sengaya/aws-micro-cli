@@ -14,7 +14,7 @@ s3api_create-bucket() {
   http_method="PUT"
   bucket="${_arg_bucket}"
   content_sha256="${empty_string_sha256}"
-  request_url="$(create_request_url "${service}" "${_arg_endpoint_url}" "${region}" "${bucket}" "")"
+  request_url="$(create_request_url "${service}" "" "${_arg_endpoint_url}" "${region}" "${bucket}" "")"
 
   if [[ "${_arg_no_sign_request}" = "on" ]]; then
       ${dryrun} curl ${curl_output} --fail -X "${http_method}" "${request_url}" -H "Content-Length: 0" -o /dev/null

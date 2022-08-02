@@ -1,0 +1,11 @@
+# s3 requests
+# format: service|command|custom_endpoint|region|bucket|key|result_url
+s3|ls||us-east-2|fah-public-data-covid19-cryptic-pockets||https://fah-public-data-covid19-cryptic-pockets.s3.us-east-2.amazonaws.com/?list-type=2&prefix=&delimiter=%2F&encoding-type=url
+s3|ls||us-east-2|fah-public-data-covid19-cryptic-pockets|human|https://fah-public-data-covid19-cryptic-pockets.s3.us-east-2.amazonaws.com/?list-type=2&prefix=human&delimiter=%2F&encoding-type=url
+s3|ls||us-east-2|fah-public-data-covid19-cryptic-pockets|human/|https://fah-public-data-covid19-cryptic-pockets.s3.us-east-2.amazonaws.com/?list-type=2&prefix=human%2F&delimiter=%2F&encoding-type=url
+s3|cp||us-east-2|fah-public-data-covid19-cryptic-pockets|human/ace2/PROJ14532/RUN1897/CLONE0/results99/frame99.xtc|https://fah-public-data-covid19-cryptic-pockets.s3.us-east-2.amazonaws.com/human/ace2/PROJ14532/RUN1897/CLONE0/results99/frame99.xtc
+s3|ls|http://custom-endpoint||||http://custom-endpoint/
+s3|ls|http://custom-endpoint||test-bucket||http://custom-endpoint/test-bucket?list-type=2&prefix=&delimiter=%2F&encoding-type=url
+s3|ls|http://custom-endpoint||test-bucket|key|http://custom-endpoint/test-bucket?list-type=2&prefix=key&delimiter=%2F&encoding-type=url
+s3|cp|http://custom-endpoint||test-bucket|key|http://custom-endpoint/test-bucket/key
+s3|cp|http://custom-endpoint||test-bucket|key/|http://custom-endpoint/test-bucket/key/
