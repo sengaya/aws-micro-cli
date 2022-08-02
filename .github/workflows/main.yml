@@ -36,7 +36,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v3
       - name: Install dependencies and BATS
-        run: "apt-get update && apt-get install -y openssl curl file bats"
+        run: "apt-get update && apt-get install -y openssl curl file bats xxd"
       - name: Run BATS tests
         run: bats tests/
   test-on-container-alpine:
@@ -60,8 +60,9 @@ jobs:
         container: ["rockylinux:9-minimal", "rockylinux:8-minimal"]
     steps:
       - name: Install BATS
+        # vim-common contains xxd
         run: |
-          microdnf install -y perl file openssl tar gzip && \
+          microdnf install -y perl file openssl tar gzip vim-common && \
             curl -L https://kojipkgs.fedoraproject.org//packages/parallel/20220322/2.fc37/noarch/parallel-20220322-2.fc37.noarch.rpm -o /tmp/parallel.rpm && \
             curl -L https://kojipkgs.fedoraproject.org//packages/bats/1.7.0/2.fc37/noarch/bats-1.7.0-2.fc37.noarch.rpm -o /tmp/bats.rpm && \
             rpm -i /tmp/parallel.rpm /tmp/bats.rpm
