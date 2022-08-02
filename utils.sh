@@ -335,7 +335,7 @@ ${
   x
   s|\n||
   p
-}' | sed -z 's/\(.*\)\n\n/\1\n/' # remove double newlines
+}' | sed '/^$/d' # remove double newlines
 }
 
 create_curl_headers() {

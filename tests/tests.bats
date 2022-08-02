@@ -382,6 +382,17 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
   [ "$output" = "$should" ]
 }
 
+@test "xml_to_text_for_keys should not return two newlines" {
+  output="$(echo '<?xml version="1.0" encoding="UTF-8"?>
+<ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>fah-public-data-covid19-cryptic-pockets</Name><Prefix></Prefix><KeyCount>5</KeyCount><MaxKeys>1000</MaxKeys><Delimiter>/</Delimiter><EncodingType>url</EncodingType><IsTruncated>false</IsTruncated><CommonPrefixes><Prefix>HCoV-NL63/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>MERS-CoV/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>SARS-CoV-1/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>SARS-CoV-2/</Prefix></CommonPrefixes><CommonPrefixes><Prefix>human/</Prefix></CommonPrefixes></ListBucketResult>' | xml_to_text_for_keys | xxd)"
+  should="$(echo '                           PRE HCoV-NL63/
+                           PRE MERS-CoV/
+                           PRE SARS-CoV-1/
+                           PRE SARS-CoV-2/
+                           PRE human/' | xxd )"
+  [ "$output" = "$should" ]
+}
+
 @test "xml_to_text_for_keys should not remove folder if it does not end with a slash" {
   output="$(echo '<?xml version="1.0" encoding="UTF-8"?>
 <ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>fah-public-data-covid19-cryptic-pockets</Name><Prefix>human</Prefix><KeyCount>1</KeyCount><MaxKeys>1000</MaxKeys><Delimiter>/</Delimiter><EncodingType>url</EncodingType><IsTruncated>false</IsTruncated><CommonPrefixes><Prefix>human/</Prefix></CommonPrefixes></ListBucketResult>' | xml_to_text_for_keys)"
