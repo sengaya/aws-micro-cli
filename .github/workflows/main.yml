@@ -25,7 +25,7 @@ jobs:
       - name: Install BATS
         run: "[[ -f /home/linuxbrew/.linuxbrew/bin/brew ]] && eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" || true ;  [[ -f /usr/local/bin/bats ]] && brew unlink bats || true ; brew install bats-core"
       - name: Run BATS tests
-        run: bats tests/
+        run: "[[ -f /home/linuxbrew/.linuxbrew/bin/brew ]] && eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" || true ; bats tests/"
   test-on-container-debian-ubuntu:
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
