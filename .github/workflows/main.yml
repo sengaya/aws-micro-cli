@@ -23,7 +23,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
       - name: Install BATS
-        run: "[[ -f /usr/local/bin/bats ]] && brew unlink bats || true ; brew install bats-core"
+        run: "[[ -f /home/linuxbrew/.linuxbrew/bin/brew ]] && eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" || true ;  [[ -f /usr/local/bin/bats ]] && brew unlink bats || true ; brew install bats-core"
       - name: Run BATS tests
         run: bats tests/
   test-on-container-debian-ubuntu:

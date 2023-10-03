@@ -170,7 +170,7 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 
 ## Contributing
 
-Pull requests are welcome. The unit tests are written with https://github.com/bats-core/bats-core. Make use of the excellent tool `shellcheck` (https://www.shellcheck.net/). Run with `shellcheck -x -a aws-micro`.
+Pull requests are welcome. The unit tests are written with https://github.com/bats-core/bats-core. Run with `bats tests/`. Make use of the excellent tool `shellcheck` (https://www.shellcheck.net/). Run with `shellcheck -x -a aws-micro`.
 
 ## License
 
