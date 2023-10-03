@@ -15,6 +15,7 @@ sts_assume-role() {
   content_sha256="$(sha256 "${body}")"
 
   if [[ "${_arg_no_sign_request}" = "on" ]]; then
+      # shellcheck disable=SC2086
       ${dryrun} curl ${curl_output} --fail "${request_url}" --data "${body}"
   else
     headers=("host:$(get_host_from_request_url "$request_url")" "x-amz-date:${date}" "content-type:application/x-www-form-urlencoded;charset=utf-8" "${security_token_header:-}")

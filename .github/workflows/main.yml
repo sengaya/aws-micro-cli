@@ -23,9 +23,9 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v4
       - name: Install BATS
-        run: "[[ -f /usr/local/bin/bats ]] && brew unlink bats || true ; brew install bats-core"
+        run: "[[ -f /home/linuxbrew/.linuxbrew/bin/brew ]] && eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" || true ;  [[ -f /usr/local/bin/bats ]] && brew unlink bats || true ; brew install bats-core"
       - name: Run BATS tests
-        run: bats tests/
+        run: "[[ -f /home/linuxbrew/.linuxbrew/bin/brew ]] && eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" || true ; bats tests/"
   test-on-container-debian-ubuntu:
     runs-on: ubuntu-latest
     container: ${{ matrix.container }}
@@ -34,7 +34,8 @@ jobs:
         container: ["ubuntu:22.04", "ubuntu:20.04", "ubuntu:18.04", "debian:12-slim", "debian:11-slim", "debian:10-slim"]
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        # use v3 for glibc compatibility with ubuntu:18.04
+        uses: actions/checkout@v3
       - name: Install dependencies and BATS
         run: "apt-get update && apt-get install -y openssl curl file bats xxd"
       - name: Run BATS tests
