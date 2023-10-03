@@ -17,6 +17,7 @@ s3api_create-bucket() {
   request_url="$(create_request_url "${service}" "" "${_arg_endpoint_url}" "${region}" "${bucket}" "")"
 
   if [[ "${_arg_no_sign_request}" = "on" ]]; then
+      # shellcheck disable=SC2086
       ${dryrun} curl ${curl_output} --fail -X "${http_method}" "${request_url}" -H "Content-Length: 0" -o /dev/null
   else
     headers=("host:$(get_host_from_request_url "$request_url")" "x-amz-content-sha256:${content_sha256}" "x-amz-date:${date}" "${security_token_header:-}")
