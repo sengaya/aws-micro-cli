@@ -81,7 +81,7 @@ md5_base64() {
 
 sha256_hmac() {
   declare -r sig="$1"
-  openssl sha256 -mac HMAC -macopt "$sig" -hex | sed 's/.*(stdin)= //'
+  openssl sha256 -mac HMAC -sha256 -macopt "$sig" -hex | sed 's/.*(stdin)= //'
 }
 
 sha256() {
