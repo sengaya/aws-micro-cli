@@ -102,6 +102,10 @@ Known bugs:
 
 - If the response is too big and split into multiple chunks (tag `<NextContinuationToken>` in the response), only the keys of the first response are shown and no further requests are done.
 
+---
+
+    mb <S3Uri>
+
 ### s3api
 
     create-bucket

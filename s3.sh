@@ -47,6 +47,24 @@ s3_ls() {
     fi
 }
 
+s3_mb() {
+  [[ "${_positionals[2]:-}" = "help" ]] && print_help_s3 && exit 0
+
+  if [[ "${#_positionals[@]}" -lt 3 ]]; then
+    _PRINT_HELP=yes die "$0: error: the following arguments are required: paths"
+  fi
+
+  if ! is_s3url "${_positionals[2]}"; then
+    _PRINT_HELP=no die "
+<S3Uri>
+Error: Invalid argument type"
+  fi
+
+  _arg_bucket="$(get_bucket_from_s3url "${_positionals[2]:-}")"
+  s3api_create-bucket
+  echo "make_bucket: ${_arg_bucket}"
+}
+
 s3_cp() {
   [[ "${_positionals[2]:-}" = "help" ]] && print_help_s3 && exit 0
 
@@ -137,6 +155,9 @@ s3() {
       ;;
     ls)
       s3_ls
+      ;;
+    mb)
+      s3_mb
       ;;
     help)
       print_help_s3
