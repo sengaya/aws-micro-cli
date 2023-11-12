@@ -29,8 +29,9 @@ case "${_arg_command}" in
     exit 0
     ;;
   *)
-    _PRINT_HELP=yes die "$0: error: argument command: Invalid choice, valid choices are:
+    _PRINT_HELP=yes die "$0: error: the following arguments are required: command
 
-s3"
+See '$0 help' for details and a list of available commands.
+"
     ;;
 esac
