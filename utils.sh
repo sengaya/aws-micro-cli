@@ -1,5 +1,23 @@
+AWS_MICRO_VERSION="v0.3.0"
 empty_string_sha256='e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
+
+print_command_help() {
+  declare -r command="${1}"
+  declare -r subcommands="${2}"
+  echo "aws-micro ${AWS_MICRO_VERSION}
+
+SYNOPSIS
+          $0 [options] ${command} <subcommand> [parameters]
+
+AVAILABLE SUBCOMMANDS"
+for subcommand in ${subcommands}; do
+  echo "       o ${subcommand}"
+done
+echo "
+For details on the commands, subcommands and options use the official aws cli
+command and the project page at https://github.com/sengaya/aws-micro"
+}
 
 output_handler() {
   declare -r function_name="${1}"

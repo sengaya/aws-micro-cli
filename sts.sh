@@ -1,5 +1,5 @@
 print_help_sts() {
-  echo "Not yet implemented."
+  print_command_help "sts" "assume-role"
 }
 
 sts_assume-role() {

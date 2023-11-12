@@ -73,6 +73,8 @@ Global options:
 
 `aws-micro` will only use virtual-hosted–style requests when used with AWS. This could break e.g. requests to buckets with `.` in the name. If a custom endpoint-url is set, a path-style request is used. See https://docs.aws.amazon.com/AmazonS3/latest/dev/VirtualHosting.html and https://aws.amazon.com/blogs/aws/amazon-s3-path-deprecation-plan-the-rest-of-the-story/
 
+S3Uri with S3 access points are not supported.
+
 The content type detection will differ from `aws`. `aws-micro` should be able to detect more file types because it uses the `file` command which utilizes libmagic. See also https://github.com/aws/aws-cli/issues/2163. If `file` is not available no content type is set and a warning is print.
 
 ---
@@ -134,12 +136,30 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 [kac]: https://keepachangelog.com/
 [semver]: https://semver.org/
 
+### [v0.3.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.3.0) - 2023-11-12
+
+#### Added
+
+- Command `s3 mb` implemented.
+- Basic help for each command implemented.
+
+#### Changed
+
+- Various changes in GitHub Actions for testing different Linux distributions and versions:
+  - Removed Ubuntu 18.04 as it's out of support and fails with actions/checkout v4.
+  - Added Ubuntu "rolling" and Debian "unstable-slim".
+  - Removed macos-10, added macos-13.
+  - Removed Alpine 3.14 and 3.15, added 3.17 and 3.18
+
+#### Fixed
+
+- Set digest explicitly when calling `openssl sha256` to support Rocky Linux 9.
+
 ### [v0.2.1](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.2.1) - 2022-08-02
 
 #### Fixed
 
 - s3 ls lists keys inside folders correctly
-
 
 ### [v0.2.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.2.0) - 2020-06-28
 

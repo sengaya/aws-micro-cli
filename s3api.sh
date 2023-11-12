@@ -1,5 +1,5 @@
 print_help_s3api() {
-  echo "Not yet implemented."
+  print_command_help "s3api" "create-bucket"
 }
 
 s3api_create-bucket() {

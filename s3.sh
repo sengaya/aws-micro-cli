@@ -1,5 +1,5 @@
 print_help_s3() {
-  echo "Not yet implemented."
+  print_command_help "s3" "cp ls mb"
 }
 
 s3_ls() {

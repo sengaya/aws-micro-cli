@@ -21,9 +21,9 @@ DESCRIPTION
 SYNOPSIS
           $0 [options] <command> <subcommand> [parameters]
 
-       Use aws-micro command help for information on a  specific  command. The
-       synopsis  for each  command  shows  its  parameters  and  their  usage.
-       Optional parameters are shown in square brackets.
+       Use aws-micro command help for information on a  specific  command. For
+       detailed information  use the official aws cli command  and the project
+       page at https://github.com/sengaya/aws-micro
 
 OPTIONS
        --debug (boolean)
@@ -72,7 +72,6 @@ To see help text, you can run:
 
   $0 help
   $0 <command> help
-  $0 <command> <subcommand> help
 "
 }
 
@@ -198,7 +197,7 @@ Invalid choice: '${_arg_storage_class}'" 1
         storage_class_header="x-amz-storage-class:${_arg_storage_class}"
         ;;
       --version)
-        echo "$0 v0.2.1"
+        echo "$0 ${AWS_MICRO_VERSION}"
         exit 0
         ;;
       *)
