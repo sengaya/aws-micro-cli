@@ -356,6 +356,34 @@ ${
 }' | sed '/^$/d' # remove double newlines
 }
 
+
+head-object_output_to_json() {
+    header=$(cat)
+
+    AcceptRanges=$(echo "$header" | grep -i 'Accept-Ranges' | cut -d' ' -f2 | tr -d '\r')
+    LastModifiedOrig=$(echo "$header" | grep -i 'Last-Modified' | cut -d' ' -f2- | tr -d '\r')
+    LastModified=$(LC_ALL=C date -u -j -f "%a, %d %b %Y %T %Z" "$LastModifiedOrig" +"%Y-%m-%dT%H:%M:%S")
+    ContentLength=$(echo "$header" | grep -i 'Content-Length' | cut -d' ' -f2 | tr -d '\r')
+    ETag=$(echo "$header" | grep -i 'ETag' | cut -d' ' -f2 | tr -d '"\r')
+    VersionId=$(echo "$header" | grep -i 'x-amz-version-id' | cut -d' ' -f2 | tr -d '\r')
+    ContentType=$(echo "$header" | grep -i 'Content-Type' | cut -d' ' -f2 | tr -d '\r')
+    StorageClass=$(echo "$header" | grep -i 'x-amz-storage-class' | cut -d' ' -f2 | tr -d '\r')
+
+    cat <<EOF
+{
+    "AcceptRanges": "$AcceptRanges",
+    "LastModified": "${LastModified}+00:00",
+    "ContentLength": $ContentLength,
+    "ETag": "\\"$ETag\\"",
+    "VersionId": "$VersionId",
+    "ContentType": "$ContentType",
+    "Metadata": {},
+    "StorageClass": "$StorageClass"
+}
+EOF
+}
+
+
 create_curl_headers() {
   # 1) delete the last 2 lines
   # 2) remove host, not needed

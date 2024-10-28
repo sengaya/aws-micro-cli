@@ -143,6 +143,11 @@ bucket-owner-full-control                | log-delivery-write" 1
         _arg_endpoint_url="$2"
         shift
         ;;
+      --key)
+        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        _arg_key="$2"
+        shift
+        ;;
       --profile)
         test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
         _arg_profile="$2"

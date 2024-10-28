@@ -116,6 +116,15 @@ Options:
 
     --bucket <value>
 
+---
+
+    head-object
+
+Options:
+
+    --bucket <value>
+    --key <value>
+
 ### sts
 
     assume-role
@@ -135,6 +144,12 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 
 [kac]: https://keepachangelog.com/
 [semver]: https://semver.org/
+
+### [v0.4.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.4.0) - 2024-10-??
+
+#### Added
+
+- Command `s3api head-object` implemented.
 
 ### [v0.3.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.3.0) - 2023-11-12
 

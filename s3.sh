@@ -44,7 +44,7 @@ s3_ls() {
       "${request_url}" \
       -H "Authorization: ${authorization_header}" \
       ${curl_headers} | "${formatter}"
-    fi
+  fi
 }
 
 s3_mb() {
