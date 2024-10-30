@@ -362,7 +362,12 @@ head-object_output_to_json() {
 
     AcceptRanges=$(echo "$header" | grep -i 'Accept-Ranges' | cut -d' ' -f2 | tr -d '\r')
     LastModifiedOrig=$(echo "$header" | grep -i 'Last-Modified' | cut -d' ' -f2- | tr -d '\r')
-    LastModified=$(LC_ALL=C date -u -j -f "%a, %d %b %Y %T %Z" "$LastModifiedOrig" +"%Y-%m-%dT%H:%M:%S")
+    # macos uses the BSD version of date while Linux uses the GNU version
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+      LastModified=$(LC_ALL=C date -u -j -f "%a, %d %b %Y %T %Z" "$LastModifiedOrig" +"%Y-%m-%dT%H:%M:%S")
+    else
+      LastModified=$(date -u -d "$LastModifiedOrig" +"%Y-%m-%dT%H:%M:%S+00:00")
+    fi
     ContentLength=$(echo "$header" | grep -i 'Content-Length' | cut -d' ' -f2 | tr -d '\r')
     ETag=$(echo "$header" | grep -i 'ETag' | cut -d' ' -f2 | tr -d '"\r')
     VersionId=$(echo "$header" | grep -i 'x-amz-version-id' | cut -d' ' -f2 | tr -d '\r')
