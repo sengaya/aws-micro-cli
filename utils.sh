@@ -364,7 +364,10 @@ head-object_output_to_json() {
     LastModifiedOrig=$(echo "$header" | grep -i 'Last-Modified' | cut -d' ' -f2- | tr -d '\r')
     # macos uses the BSD version of date while Linux uses the GNU version
     if [[ "$OSTYPE" == "darwin"* ]]; then
-      LastModified=$(LC_ALL=C date -u -j -f "%a, %d %b %Y %T %Z" "$LastModifiedOrig" +"%Y-%m-%dT%H:%M:%S")
+      LastModified=$(LC_ALL=C date -u -j -f "%a, %d %b %Y %T %Z" "$LastModifiedOrig" +"%Y-%m-%dT%H:%M:%S+00:00")
+    elif [[ "$OSTYPE" == "linux-musl" ]]; then
+      # the busybox version of date does not support %Z in the -D option
+      LastModified=$(date -u -D "%a, %d %b %Y %T" +"%Y-%m-%dT%H:%M:%S+00:00" -d "$LastModifiedOrig")
     else
       LastModified=$(date -u -d "$LastModifiedOrig" +"%Y-%m-%dT%H:%M:%S+00:00")
     fi
@@ -377,7 +380,7 @@ head-object_output_to_json() {
     cat <<EOF
 {
     "AcceptRanges": "$AcceptRanges",
-    "LastModified": "${LastModified}+00:00",
+    "LastModified": "${LastModified}",
     "ContentLength": $ContentLength,
     "ETag": "\\"$ETag\\"",
     "VersionId": "$VersionId",
