@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-22.04, ubuntu-20.04, macos-13, macos-12, macos-11]
+        os: [ubuntu-24.04, ubuntu-22.04, ubuntu-20.04, macos-15, macos-14, macos-13, macos-12]
     steps:
       - name: Check out code
         uses: actions/checkout@v4
@@ -31,10 +31,9 @@ jobs:
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        container: ["ubuntu:rolling", "ubuntu:22.04", "ubuntu:20.04", "debian:unstable-slim", "debian:12-slim", "debian:11-slim", "debian:10-slim"]
+        container: ["ubuntu:rolling", "ubuntu:24.04", "ubuntu:22.04", "ubuntu:20.04", "debian:unstable-slim", "debian:12-slim", "debian:11-slim"]
     steps:
       - name: Check out code
-        # use v3 for glibc compatibility with ubuntu:18.04
         uses: actions/checkout@v4
       - name: Install dependencies and BATS
         run: "apt-get update && apt-get install -y openssl curl file bats xxd"
@@ -45,7 +44,7 @@ jobs:
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        container: ["alpine:edge", "alpine:3.18", "alpine:3.17", "alpine:3.16", "alpine:3.15"]
+        container: ["alpine:edge", "alpine:3.20", "alpine:3.19", "alpine:3.18", "alpine:3.17"]
     steps:
       - name: Check out code
         uses: actions/checkout@v4

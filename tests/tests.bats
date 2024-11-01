@@ -397,6 +397,33 @@ f309cf059b3420f219bb600099f1fef8ec9201847d4f0f590502814e52e12df1" ]
   output="$(echo '<?xml version="1.0" encoding="UTF-8"?>
 <ListBucketResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Name>fah-public-data-covid19-cryptic-pockets</Name><Prefix>human</Prefix><KeyCount>1</KeyCount><MaxKeys>1000</MaxKeys><Delimiter>/</Delimiter><EncodingType>url</EncodingType><IsTruncated>false</IsTruncated><CommonPrefixes><Prefix>human/</Prefix></CommonPrefixes></ListBucketResult>' | xml_to_text_for_keys)"
   should="                           PRE human/"
+  [ "$output" = "$should" ]
+}
+
+@test "head-object_output_to_json should return json" {
+  output="$(echo 'HTTP/1.1 200 OK
+x-amz-id-2: fwONee+wKZUuUbRmqAAiAzMD+52SMdxWTxXFBwH/RKIs02K3odikt7WLmAxAT3YTZwqnM49jRrM=
+x-amz-request-id: 9JYVJPJJDF6GMSPV
+Date: Mon, 28 Oct 2024 20:02:54 GMT
+Last-Modified: Thu, 17 Sep 2020 18:57:32 GMT
+ETag: "632d15185183c026de199c1ce87ff2c6"
+x-amz-storage-class: INTELLIGENT_TIERING
+x-amz-version-id: vqJCkVIAdE4Z3PdIt28Uw_t1BGh4pGMf
+Accept-Ranges: bytes
+Content-Type: binary/octet-stream
+Content-Length: 1848584
+Server: AmazonS3
+' | head-object_output_to_json)"
+  should='{
+    "AcceptRanges": "bytes",
+    "LastModified": "2020-09-17T18:57:32+00:00",
+    "ContentLength": 1848584,
+    "ETag": "\"632d15185183c026de199c1ce87ff2c6\"",
+    "VersionId": "vqJCkVIAdE4Z3PdIt28Uw_t1BGh4pGMf",
+    "ContentType": "binary/octet-stream",
+    "Metadata": {},
+    "StorageClass": "INTELLIGENT_TIERING"
+}'
   echo "$output"
   [ "$output" = "$should" ]
 }
