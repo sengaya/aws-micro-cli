@@ -1,5 +1,5 @@
 print_help_s3api() {
-  print_command_help "s3api" "create-bucket"
+  print_command_help "s3api" "create-bucket head-object"
 }
 
 s3api_create-bucket() {

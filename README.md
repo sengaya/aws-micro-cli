@@ -145,11 +145,19 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 [kac]: https://keepachangelog.com/
 [semver]: https://semver.org/
 
-### [v0.4.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.4.0) - 2024-10-??
+### [v0.4.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.4.0) - 2024-11-01
 
 #### Added
 
 - Command `s3api head-object` implemented.
+
+#### Changed
+
+- Updated GitHub Actions with current supported versions:
+  - Added Ubuntu 24.04
+  - Removed Debian 10
+  - Removed macos-11, added macos-14 and macos-15
+  - Removed Alpine 3.15 and 3.16, added 3.19 and 3.20
 
 ### [v0.3.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.3.0) - 2023-11-12
 
@@ -164,7 +172,7 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
   - Removed Ubuntu 18.04 as it's out of support and fails with actions/checkout v4.
   - Added Ubuntu "rolling" and Debian "unstable-slim".
   - Removed macos-10, added macos-13.
-  - Removed Alpine 3.14 and 3.15, added 3.17 and 3.18
+  - Removed Alpine 3.13 and 3.14, added 3.17 and 3.18
 
 #### Fixed
 
