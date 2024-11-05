@@ -5,6 +5,14 @@ die() {
   exit "${_ret}"
 }
 
+check_argument() {
+  if [[ "$1" == -* ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 print_long_help() {
   echo "AWS-MICRO()                                                        AWS-MICRO()
 
@@ -129,42 +137,42 @@ bucket-owner-full-control                | log-delivery-write" 1
         acl_header="x-amz-acl:${_arg_acl}"
         ;;
       --content-type)
-        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        test $# -lt 2 || check_argument "$2" && die "Missing value for the optional argument '$_key'." 1
         _arg_content_type="$2"
         shift
         ;;
       --bucket)
-        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        test $# -lt 2 || check_argument "$2" && die "Missing value for the optional argument '$_key'." 1
         _arg_bucket="$2"
         shift
         ;;
       --endpoint-url)
-        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        test $# -lt 2 || check_argument "$2" && die "Missing value for the optional argument '$_key'." 1
         _arg_endpoint_url="$2"
         shift
         ;;
       --key)
-        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        test $# -lt 2 || check_argument "$2" && die "Missing value for the optional argument '$_key'." 1
         _arg_key="$2"
         shift
         ;;
       --profile)
-        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        test $# -lt 2 || check_argument "$2" && die "Missing value for the optional argument '$_key'." 1
         _arg_profile="$2"
         shift
         ;;
       --region)
-        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        test $# -lt 2 || check_argument "$2" && die "Missing value for the optional argument '$_key'." 1
         region="$2"
         shift
         ;;
       --role-arn)
-        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        test $# -lt 2 || check_argument "$2" && die "Missing value for the optional argument '$_key'." 1
         _arg_role_arn="$2"
         shift
         ;;
       --role-session-name)
-        test $# -lt 2 && die "Missing value for the optional argument '$_key'." 1
+        test $# -lt 2 || check_argument "$2" && die "Missing value for the optional argument '$_key'." 1
         _arg_role_session_name="$2"
         shift
         ;;
@@ -240,6 +248,6 @@ get_args() {
     region="${AWS_DEFAULT_REGION:-}"
   fi
   if [[ -z "${AWS_CONFIG_FILE:-}" ]]; then
-    AWS_CONFIG_FILE="$HOME/.aws/config"
+    AWS_CONFIG_FILE=~"/.aws/config"
   fi
 }
