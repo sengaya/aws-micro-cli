@@ -145,6 +145,19 @@ The format is based on [Keep a Changelog][kac] and this project adheres to [Sema
 [kac]: https://keepachangelog.com/
 [semver]: https://semver.org/
 
+### [v0.4.1](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.4.1) - 2024-11-05
+
+#### Changed
+
+- Improved `date` detection
+- Improved argument handling
+- Removed macos-12 from GitHub Actions as it will soon be deprecated
+
+#### Fixed
+
+- Use `~` instead of `$HOME`. The latter would result in an error in environments like AWS Lambda where `$HOME` is not set
+- Return correct version
+
 ### [v0.4.0](https://github.com/sengaya/aws-micro-cli/releases/tag/v0.4.0) - 2024-11-01
 
 #### Added
