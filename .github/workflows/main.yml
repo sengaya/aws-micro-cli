@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Run shellcheck
         run: ./build-single-executable aws-micro-release && shellcheck aws-micro-release
   test-on-vm:
@@ -21,7 +21,7 @@ jobs:
         os: [ubuntu-24.04, ubuntu-22.04, ubuntu-20.04, macos-15, macos-14, macos-13]
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install BATS
         run: "[[ -f /home/linuxbrew/.linuxbrew/bin/brew ]] && eval \"$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)\" || true ;  [[ -f /usr/local/bin/bats ]] && brew unlink bats || true ; brew install bats-core"
       - name: Run BATS tests
@@ -34,7 +34,7 @@ jobs:
         container: ["ubuntu:rolling", "ubuntu:24.04", "ubuntu:22.04", "ubuntu:20.04", "debian:unstable-slim", "debian:12-slim", "debian:11-slim"]
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install dependencies and BATS
         run: "apt-get update && apt-get install -y openssl curl file bats xxd"
       - name: Run BATS tests
@@ -47,7 +47,7 @@ jobs:
         container: ["alpine:edge", "alpine:3.20", "alpine:3.19", "alpine:3.18", "alpine:3.17"]
     steps:
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Install dependencies and BATS
         run: "apk add --no-cache bash openssl curl file bats"
       - name: Run BATS tests
@@ -67,6 +67,6 @@ jobs:
             curl -L https://kojipkgs.fedoraproject.org//packages/bats/1.7.0/2.fc37/noarch/bats-1.7.0-2.fc37.noarch.rpm -o /tmp/bats.rpm && \
             rpm -i /tmp/parallel.rpm /tmp/bats.rpm
       - name: Check out code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Run BATS tests
         run: bats tests/
