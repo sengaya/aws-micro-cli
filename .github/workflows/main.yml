@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-24.04, ubuntu-22.04, ubuntu-20.04, macos-15, macos-14, macos-13]
+        os: [ubuntu-24.04, ubuntu-22.04, macos-26, macos-15, macos-14]
     steps:
       - name: Check out code
         uses: actions/checkout@v5
@@ -31,7 +31,7 @@ jobs:
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        container: ["ubuntu:rolling", "ubuntu:24.04", "ubuntu:22.04", "ubuntu:20.04", "debian:unstable-slim", "debian:12-slim", "debian:11-slim"]
+        container: ["ubuntu:rolling", "ubuntu:24.04", "ubuntu:22.04", "debian:unstable-slim", "debian:13-slim", "debian:12-slim", "debian:11-slim"]
     steps:
       - name: Check out code
         uses: actions/checkout@v5
@@ -44,7 +44,7 @@ jobs:
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        container: ["alpine:edge", "alpine:3.20", "alpine:3.19", "alpine:3.18", "alpine:3.17"]
+        container: ["alpine:edge", "alpine:3.22", "alpine:3.21", "alpine:3.20", "alpine:3.19"]
     steps:
       - name: Check out code
         uses: actions/checkout@v5
@@ -57,7 +57,7 @@ jobs:
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        container: ["rockylinux:9-minimal", "rockylinux:8-minimal"]
+        container: ["rockylinux/rockylinux:10-minimal", "rockylinux/rockylinux:9-minimal", "rockylinux/rockylinux:8-minimal"]
     steps:
       - name: Install BATS
         # vim-common contains xxd
