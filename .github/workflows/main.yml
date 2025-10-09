@@ -57,7 +57,7 @@ jobs:
     container: ${{ matrix.container }}
     strategy:
       matrix:
-        container: ["rockylinux/rockylinux:10-ubi-micro", "rockylinux/rockylinux:9-ubi-micro", "rockylinux/rockylinux:8-ubi-micro"]
+        container: ["rockylinux/rockylinux:10-minimal", "rockylinux/rockylinux:9-minimal", "rockylinux/rockylinux:8-minimal"]
     steps:
       - name: Install BATS
         # vim-common contains xxd
