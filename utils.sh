@@ -365,6 +365,8 @@ head-object_output_to_json() {
 
     if date --version 2>/dev/null | head -n 1 | grep -q "GNU"; then
       LastModified=$(date -u -d "$LastModifiedOrig" +"%Y-%m-%dT%H:%M:%S+00:00")
+    elif date --version 2>/dev/null | head -n 1 | grep -q "uutils coreutils"; then
+      LastModified=$(date -u -d "$LastModifiedOrig" +"%Y-%m-%dT%H:%M:%S+00:00")
     elif date --version 2>&1 | grep -q "BusyBox"; then
       # the busybox version of date does not support %Z in the -D option
       LastModified=$(date -u -d "$LastModifiedOrig" -D "%a, %d %b %Y %T" +"%Y-%m-%dT%H:%M:%S+00:00")
